@@ -3,8 +3,11 @@
 
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'formation_humaine_db');
-define('DB_USER', 'Maurrer');
+define('DB_USER', 'Maurer');
 define('DB_PASS', '20031975'); // Mets ton mot de passe MySQL s'il y en a un
+
+// Définition de l'URL de base pour les redirections propres
+define('BASE_URL', 'http://localhost:8000');
 
 class Database {
     private static ?PDO $instance = null;

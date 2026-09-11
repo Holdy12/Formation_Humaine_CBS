@@ -4,7 +4,10 @@
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'formation_humaine_db');
 define('DB_USER', 'Maurer');
-define('DB_PASS', '20031975'); // Ajuste si nécessaire
+define('DB_PASS', '20031975');
+
+// Ajout de l'URL de base ici
+define('BASE_URL', 'http://localhost:8000');
 
 class Database {
     private static ?PDO $instance = null;
