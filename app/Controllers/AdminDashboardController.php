@@ -13,6 +13,63 @@ class AdminDashboardController {
         require_once __DIR__ . '/../Views/admin/dashboard.php';
     }
 
+   public function etudiants() {
+        $db = Database::getConnection();
+
+        $etudiantsList = [];
+        try {
+            // Requête robuste avec vérification des colonnes de la table promotion
+            $sql = "SELECT p.ID_PERSONNE, p.NOM, p.PRENOM, p.EMAIL, p.TELEPHONE, p.SEXE, p.PHOTO, 
+                           e.ID_PROMO, pr.CODE_PROMO,
+                           COALESCE(pr.NIVEAU, n.LIBELLE_NIVEAU, 'Licence 1') AS NIVEAU, 
+                           COALESCE(pr.FILIERE, f.NOM_FILIERE, 'Génie Informatique') AS FILIERE 
+                    FROM PERSONNE p
+                    INNER JOIN ETUDIANT e ON p.ID_PERSONNE = e.ID_PERSONNE
+                    LEFT JOIN PROMOTION pr ON e.ID_PROMO = pr.ID_PROMO
+                    LEFT JOIN NIVEAU n ON pr.ID_NIVEAU = n.ID_NIVEAU
+                    LEFT JOIN FILIERE f ON pr.ID_FILIERE = f.ID_FILIERE
+                    ORDER BY p.NOM ASC, p.PRENOM ASC";
+            $stmt = $db->query($sql);
+            $etudiantsList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            // En cas d'erreur de jointure, on bascule sur une requête de secours basique pour ne pas bloquer l'écran
+            $sqlSecours = "SELECT p.ID_PERSONNE, p.NOM, p.PRENOM, p.EMAIL, p.TELEPHONE, p.SEXE, p.PHOTO, 
+                                  e.ID_PROMO, pr.CODE_PROMO, 'Licence 1' AS NIVEAU, 'Génie Informatique' AS FILIERE 
+                           FROM PERSONNE p
+                           INNER JOIN ETUDIANT e ON p.ID_PERSONNE = e.ID_PERSONNE
+                           LEFT JOIN PROMOTION pr ON e.ID_PROMO = pr.ID_PROMO
+                           ORDER BY p.NOM ASC, p.PRENOM ASC";
+            $etudiantsList = $db->query($sqlSecours)->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $totalEtudiants = count($etudiantsList);
+
+        $totalGarcons = 0;
+        $totalFilles = 0;
+        try {
+            $totalGarcons = (int)$db->query("SELECT COUNT(*) FROM ETUDIANT e JOIN PERSONNE p ON e.ID_PERSONNE = p.ID_PERSONNE WHERE p.SEXE = 'M'")->fetchColumn();
+            $totalFilles = (int)$db->query("SELECT COUNT(*) FROM ETUDIANT e JOIN PERSONNE p ON e.ID_PERSONNE = p.ID_PERSONNE WHERE p.SEXE = 'F'")->fetchColumn();
+        } catch (\Exception $e) {}
+
+        $promotions = [];
+        try {
+            $promotions = $db->query("SELECT CODE_PROMO FROM PROMOTION ORDER BY CODE_PROMO DESC")->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {}
+
+        $filieres = ['Génie Informatique', 'Réseaux et Télécoms'];
+
+        $data = [
+            'etudiants'       => $totalEtudiants,
+            'etudiants_list'  => $etudiantsList,
+            'total_etudiants' => $totalEtudiants,
+            'total_garcons'   => $totalGarcons,
+            'total_filles'    => $totalFilles,
+            'promotions'      => $promotions,
+            'filieres'        => $filieres
+        ];
+
+        require_once __DIR__ . '/../Views/admin/etudiants.php';
+    }
     public function getDashboardData($choixAnnee = 'active', $choixSemestre = 'actif'): array {
         try {
             $db = Database::getConnection();
@@ -29,30 +86,45 @@ class AdminDashboardController {
                 $listeAnnees = $stmtListeAnnees->fetchAll(PDO::FETCH_ASSOC);
             } catch (\Exception $e) {}
 
-            // 2. Gestion de l'ANNEE_ACADEMIQUE
-            $anneeDebut = null;
-            $anneeFin = null;
+            // 2. Gestion de l'ANNEE_ACADEMIQUE et du SEMESTRE
+            $dateDebut = null;
+            $dateFin = null;
+
             try {
-                if ($choixAnnee === 'active') {
-                    $stmtAnnee = $db->query("SELECT DATE_DEBUT, DATE_FIN FROM ANNEE_ACADEMIQUE WHERE CURRENT_DATE() BETWEEN DATE_DEBUT AND DATE_FIN LIMIT 1");
-                    $anneeInfo = $stmtAnnee->fetch(PDO::FETCH_ASSOC);
-                    if ($anneeInfo) {
-                        $anneeDebut = $anneeInfo['DATE_DEBUT'];
-                        $anneeFin = $anneeInfo['DATE_FIN'];
+                if (is_numeric($choixSemestre)) {
+                    $stmtSem = $db->prepare("SELECT DATE_DEBUT, DATE_FIN FROM SEMESTRE WHERE CODE_SEMESTRE = ? OR ID_SEMESTRE = ? LIMIT 1");
+                    $stmtSem->execute(['S' . $choixSemestre, $choixSemestre]);
+                    $semInfo = $stmtSem->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($semInfo) {
+                        $dateDebut = $semInfo['DATE_DEBUT'];
+                        $dateFin = $semInfo['DATE_FIN'];
                     }
-                } elseif (is_numeric($choixAnnee)) {
-                    $stmtAnnee = $db->prepare("SELECT DATE_DEBUT, DATE_FIN FROM ANNEE_ACADEMIQUE WHERE ID_ANNEE = ? LIMIT 1");
-                    $stmtAnnee->execute([$choixAnnee]);
-                    $anneeInfo = $stmtAnnee->fetch(PDO::FETCH_ASSOC);
-                    if ($anneeInfo) {
-                        $anneeDebut = $anneeInfo['DATE_DEBUT'];
-                        $anneeFin = $anneeInfo['DATE_FIN'];
+                }
+
+                if (!$dateDebut || !$dateFin) {
+                    if ($choixAnnee === 'active') {
+                        $stmtAnnee = $db->query("SELECT DATE_DEBUT, DATE_FIN FROM ANNEE_ACADEMIQUE WHERE CURRENT_DATE() BETWEEN DATE_DEBUT AND DATE_FIN LIMIT 1");
+                        $anneeInfo = $stmtAnnee->fetch(PDO::FETCH_ASSOC);
+                        if (!$anneeInfo) {
+                            $stmtAnnee = $db->query("SELECT DATE_DEBUT, DATE_FIN FROM ANNEE_ACADEMIQUE ORDER BY DATE_DEBUT DESC LIMIT 1");
+                            $anneeInfo = $stmtAnnee->fetch(PDO::FETCH_ASSOC);
+                        }
+                        if ($anneeInfo) {
+                            $dateDebut = $anneeInfo['DATE_DEBUT'];
+                            $dateFin = $anneeInfo['DATE_FIN'];
+                        }
+                    } elseif (is_numeric($choixAnnee)) {
+                        $stmtAnnee = $db->prepare("SELECT DATE_DEBUT, DATE_FIN FROM ANNEE_ACADEMIQUE WHERE ID_ANNEE = ? LIMIT 1");
+                        $stmtAnnee->execute([$choixAnnee]);
+                        $anneeInfo = $stmtAnnee->fetch(PDO::FETCH_ASSOC);
+                        if ($anneeInfo) {
+                            $dateDebut = $anneeInfo['DATE_DEBUT'];
+                            $dateFin = $anneeInfo['DATE_FIN'];
+                        }
                     }
                 }
             } catch (\Exception $e) {}
-
-            $dateDebut = $anneeDebut;
-            $dateFin = $anneeFin;
 
             // 3. Signalements filtrés par période
             $totalSignalements = 0;
@@ -128,14 +200,7 @@ class AdminDashboardController {
             } catch (\Exception $e) {}
             $totalPointsAttribues = $totalPointsPositifs + $totalPointsNegatifs;
 
-            // 6. Génération dynamique des mois et de l'évolution par domaine basée sur DATE_DEBUT et DATE_FIN
-            $moisLabels = [];
-            $moisCles = [];
-            $evolutionDatasets = [];
-
-            // 6. Génération dynamique (SANS le bloc try/catch pour voir lâchement l'erreur)
-            
-            // Valeurs par défaut si aucune date d'année n'est trouvée
+            // 6. Génération dynamique des mois et de l'évolution par domaine
             $pDeb = $dateDebut ?? date('Y-m-01', strtotime('-1 year'));
             $pFin = $dateFin ?? date('Y-m-t');
 
@@ -146,7 +211,6 @@ class AdminDashboardController {
             $finDt->modify('last day of this month');
 
             $interval = DateInterval::createFromDateString('1 month');
-            // Ajout d'un jour pour inclure la fin de période dans DatePeriod
             $finPeriod = clone $finDt;
             $finPeriod->modify('+1 day');
             $periode = new DatePeriod($debutDt, $interval, $finPeriod);
@@ -164,7 +228,6 @@ class AdminDashboardController {
                 $moisCles[] = $dt->format('Y-m');
             }
 
-            // Requête d'évolution par domaine groupée par mois
             $sqlEvo = "SELECT d.NOM_DOMAINE, 
                               DATE_FORMAT(m.DATE_MOUVEMENT, '%Y-%m') as MOIS, 
                               COUNT(m.ID_MOUVEMENT) as TOTAL 
@@ -210,7 +273,8 @@ class AdminDashboardController {
                 ];
                 $i++;
             }
-           // 7. Cartes supplémentaires
+
+            // 7. Cartes supplémentaires
             $catPlusPositive = 'Non disponible';
             $catPlusNegative = 'Non disponible';
             $etudiantMeritant = 'Aucun étudiant';
@@ -218,14 +282,12 @@ class AdminDashboardController {
 
             try {
                 if (!empty($domainesStats)) {
-                    // Tri protégé pour la catégorie la plus positive
                     $sortedPos = $domainesStats;
                     usort($sortedPos, fn($a, $b) => ($b['pos'] ?? 0) <=> ($a['pos'] ?? 0));
                     if (($sortedPos[0]['pos'] ?? 0) > 0) {
                         $catPlusPositive = $sortedPos[0]['cat'] ?? 'Non disponible';
                     }
 
-                    // Tri protégé pour la catégorie la plus négative
                     $sortedNeg = $domainesStats;
                     usort($sortedNeg, fn($a, $b) => ($b['neg'] ?? 0) <=> ($a['neg'] ?? 0));
                     if (($sortedNeg[0]['neg'] ?? 0) > 0) {
@@ -233,31 +295,45 @@ class AdminDashboardController {
                     }
                 }
 
-                // ... Le reste de la section 7 (requêtes $stmtMeritant et $stmtSanctionne) reste identique ...
-
-                $stmtMeritant = $db->query("
+                $sqlMeritant = "
                     SELECT p.NOM, p.PRENOM, SUM(m.NOMBRE_POINTS) as total_pts 
                     FROM MOUVEMENT_POINTS m 
                     JOIN PERSONNE p ON m.ID_PERSONNE = p.ID_PERSONNE 
-                    WHERE m.TYPE_MOUVEMENT = 'POSITIF' 
-                    GROUP BY p.ID_PERSONNE, p.NOM, p.PRENOM 
-                    ORDER BY total_pts DESC 
-                    LIMIT 1
-                ");
+                    WHERE m.TYPE_MOUVEMENT = 'POSITIF'
+                ";
+                if ($dateDebut && $dateFin) {
+                    $sqlMeritant .= " AND m.DATE_MOUVEMENT BETWEEN ? AND ?";
+                }
+                $sqlMeritant .= " GROUP BY p.ID_PERSONNE, p.NOM, p.PRENOM ORDER BY total_pts DESC LIMIT 1";
+
+                $stmtMeritant = $db->prepare($sqlMeritant);
+                if ($dateDebut && $dateFin) {
+                    $stmtMeritant->execute([$dateDebut, $dateFin]);
+                } else {
+                    $stmtMeritant->execute();
+                }
                 $resMeritant = $stmtMeritant->fetch(PDO::FETCH_ASSOC);
                 if ($resMeritant) {
                     $etudiantMeritant = trim($resMeritant['PRENOM'] . ' ' . $resMeritant['NOM']) . ' (' . $resMeritant['total_pts'] . ' pts)';
                 }
 
-                $stmtSanctionne = $db->query("
+                $sqlSanctionne = "
                     SELECT p.NOM, p.PRENOM, SUM(m.NOMBRE_POINTS) as total_pts 
                     FROM MOUVEMENT_POINTS m 
                     JOIN PERSONNE p ON m.ID_PERSONNE = p.ID_PERSONNE 
-                    WHERE m.TYPE_MOUVEMENT = 'NEGATIF' 
-                    GROUP BY p.ID_PERSONNE, p.NOM, p.PRENOM 
-                    ORDER BY total_pts DESC 
-                    LIMIT 1
-                ");
+                    WHERE m.TYPE_MOUVEMENT = 'NEGATIF'
+                ";
+                if ($dateDebut && $dateFin) {
+                    $sqlSanctionne .= " AND m.DATE_MOUVEMENT BETWEEN ? AND ?";
+                }
+                $sqlSanctionne .= " GROUP BY p.ID_PERSONNE, p.NOM, p.PRENOM ORDER BY total_pts DESC LIMIT 1";
+
+                $stmtSanctionne = $db->prepare($sqlSanctionne);
+                if ($dateDebut && $dateFin) {
+                    $stmtSanctionne->execute([$dateDebut, $dateFin]);
+                } else {
+                    $stmtSanctionne->execute();
+                }
                 $resSanctionne = $stmtSanctionne->fetch(PDO::FETCH_ASSOC);
                 if ($resSanctionne) {
                     $etudiantSanctionne = trim($resSanctionne['PRENOM'] . ' ' . $resSanctionne['NOM']) . ' (' . $resSanctionne['total_pts'] . ' pts)';

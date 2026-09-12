@@ -113,32 +113,44 @@
                 </div>
                 <!-- Filtres dynamiques adaptés pour l'année et les semestres vides/actifs -->
                 <div class="filters">
-                    <form method="GET" action="index.php" style="display: flex; gap: 10px; align-items: center;">
-                        <input type="hidden" name="action" value="dashboard">
-                        
-                        <!-- Sélecteur d'Année Académique -->
-                        <select name="annee" class="filter-btn" style="background: var(--bg-card, #fff); color: inherit; border: 1px solid var(--border-color, #ccc); cursor: pointer;" onchange="this.form.submit()">
-                            <option value="active" <?= ($data['annee_actuelle'] ?? '') === 'active' ? 'selected' : '' ?>>📅 Année en cours</option>
-                            <?php if (!empty($data['liste_annees']) && is_array($data['liste_annees'])): ?>
-                                <?php foreach ($data['liste_annees'] as $annee): ?>
-                                    <option value="<?= $annee['ID_ANNEE'] ?>" <?= (string)($data['annee_actuelle'] ?? '') === (string)$annee['ID_ANNEE'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($annee['LIBELLE_ANNEE']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <option value="" disabled>Aucune année enregistrée</option>
-                            <?php endif; ?>
-                        </select>
+                   <div style="display: inline-block; margin: 0;">
+    <!-- Sélecteur d'Année Académique -->
+    <select id="filter-annee" class="filter-btn" style="background: var(--bg-card, #fff); color: inherit; border: 1px solid var(--border-color, #ccc); cursor: pointer;">
+        <option value="active" <?= ($data['annee_actuelle'] ?? '') === 'active' ? 'selected' : '' ?>>📅 Année en cours</option>
+        <?php if (!empty($data['liste_annees']) && is_array($data['liste_annees'])): ?>
+            <?php foreach ($data['liste_annees'] as $annee): ?>
+                <option value="<?= $annee['ID_ANNEE'] ?>" <?= (string)($data['annee_actuelle'] ?? '') === (string)$annee['ID_ANNEE'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($annee['LIBELLE_ANNEE']) ?>
+                </option>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <option value="" disabled>Aucune année enregistrée</option>
+        <?php endif; ?>
+    </select>
 
-                        <!-- Sélecteur de Semestre -->
-                        <select name="semestre" class="filter-btn" style="background: var(--bg-card, #fff); color: inherit; border: 1px solid var(--border-color, #ccc); cursor: pointer;" onchange="this.form.submit()">
-                            <option value="actif" <?= ($data['semestre_actuel'] ?? '') === 'actif' ? 'selected' : '' ?>>⏱️ Semestre Actif</option>
-                            <option value="1" <?= ($data['semestre_actuel'] ?? '') === '1' ? 'selected' : '' ?>>⏱️ Semestre 1</option>
-                            <option value="2" <?= ($data['semestre_actuel'] ?? '') === '2' ? 'selected' : '' ?>>⏱️ Semestre 2</option>
-                        </select>
+    <!-- Sélecteur de Semestre -->
+    <select id="filter-semestre" class="filter-btn" style="background: var(--bg-card, #fff); color: inherit; border: 1px solid var(--border-color, #ccc); cursor: pointer; margin-left: 5px;">
+        <option value="actif" <?= ($data['semestre_actuel'] ?? '') === 'actif' ? 'selected' : '' ?>>⏱️ Semestre Actif</option>
+        <option value="1" <?= ($data['semestre_actuel'] ?? '') === '1' ? 'selected' : '' ?>>⏱️ Semestre 1</option>
+        <option value="2" <?= ($data['semestre_actuel'] ?? '') === '2' ? 'selected' : '' ?>>⏱️ Semestre 2</option>
+    </select>
+</div>
 
-                        <button type="button" class="filter-btn btn-refresh" onclick="window.location.reload();" title="Actualiser">🔄</button>
-                    </form>
+<script>
+document.getElementById('filter-annee').addEventListener('change', function() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('route', 'admin_dashboard');
+    url.searchParams.set('annee', this.value);
+    window.location.href = url.toString();
+});
+
+document.getElementById('filter-semestre').addEventListener('change', function() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('route', 'admin_dashboard');
+    url.searchParams.set('semestre', this.value);
+    window.location.href = url.toString();
+});
+</script>
                 </div>
             </div>
 
