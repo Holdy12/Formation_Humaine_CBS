@@ -1,5 +1,6 @@
 <?php
 // core/Auth.php
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/Permissions.php';
 require_once __DIR__ . '/Erreur.php';
 
@@ -22,8 +23,20 @@ class Auth {
         return in_array(self::role(), Permissions::ROLES_PERSONNEL, true);
     }
 
+    // Animer un club s'acquiert aussi en étant désigné responsable d'un club, quel que soit le rôle.
     public static function peut(string $permission): bool {
-        return Permissions::possede(self::role(), $permission);
+        if (Permissions::possede(self::role(), $permission)) {
+            return true;
+        }
+        if ($permission === 'club.animer' && self::estPersonnel()) {
+            if (!isset($_SESSION['anime_un_club'])) {
+                $stmt = Database::getConnection()->prepare("SELECT 1 FROM CLUB WHERE ID_RESPONSABLE = :id LIMIT 1");
+                $stmt->execute(['id' => self::idPersonne()]);
+                $_SESSION['anime_un_club'] = (bool)$stmt->fetchColumn();
+            }
+            return $_SESSION['anime_un_club'];
+        }
+        return false;
     }
 
     public static function rediriger(string $action, array $params = []): never {
@@ -94,6 +107,7 @@ class Auth {
         self::demarrer();
         session_regenerate_id(true);
         $_SESSION['user_id'] = (int)$personne['ID_PERSONNE'];
+        unset($_SESSION['anime_un_club']);
         $_SESSION['user_role'] = strtoupper($personne['CODE_ROLE']);
         $_SESSION['nom'] = $personne['NOM'];
         $_SESSION['prenom'] = $personne['PRENOM'];

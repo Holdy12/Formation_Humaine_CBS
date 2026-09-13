@@ -141,4 +141,60 @@ class Personne {
         $stmt = Database::getConnection()->prepare("UPDATE PERSONNE SET TELEPHONE = :tel, ADRESSE = :adresse WHERE ID_PERSONNE = :id");
         $stmt->execute(['tel' => $telephone, 'adresse' => $adresse, 'id' => $id]);
     }
+
+    public static function roles(): array {
+        return Database::getConnection()->query("SELECT * FROM ROLE WHERE CODE_ROLE <> 'ETUDIANT' ORDER BY ID_ROLE")->fetchAll();
+    }
+
+    public static function personnel(string $q = ''): array {
+        $params = [];
+        $ou = "r.CODE_ROLE <> 'ETUDIANT'";
+        if ($q !== '') {
+            $ou .= " AND CONCAT_WS(' ', p.NOM, p.PRENOM, p.EMAIL) LIKE :q";
+            $params['q'] = '%' . $q . '%';
+        }
+        $stmt = Database::getConnection()->prepare("
+            SELECT p.ID_PERSONNE, p.NOM, p.PRENOM, p.EMAIL, p.TELEPHONE, p.SEXE, p.STATUT_COMPTE, p.DOIT_CHANGER_MDP, p.ID_ROLE, p.PHOTO,
+                   r.CODE_ROLE, r.LIBELLE_ROLE,
+                   (SELECT MAX(DATE_CONNEXION) FROM JOURNAL_CONNEXION j WHERE j.ID_PERSONNE = p.ID_PERSONNE AND j.ACTION = 'Connexion' AND j.STATUT = 'SUCCES') AS DERNIERE_CONNEXION
+            FROM PERSONNE p JOIN ROLE r ON r.ID_ROLE = p.ID_ROLE
+            WHERE $ou ORDER BY r.ID_ROLE, p.NOM, p.PRENOM
+        ");
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    public static function creerPersonnel(array $d): array {
+        $db = Database::getConnection();
+        $motDePasse = self::genererMotDePasseTemporaire();
+        $stmt = $db->prepare("
+            INSERT INTO PERSONNE (ID_ROLE, NOM, PRENOM, EMAIL, MOT_DE_PASSE, TELEPHONE, SEXE, STATUT_COMPTE, DOIT_CHANGER_MDP)
+            VALUES (:role, :nom, :prenom, :email, :mdp, :tel, :sexe, 'ACTIF', 1)
+        ");
+        $stmt->execute([
+            'role' => $d['id_role'], 'nom' => $d['nom'], 'prenom' => $d['prenom'], 'email' => $d['email'],
+            'mdp' => password_hash($motDePasse, PASSWORD_DEFAULT), 'tel' => $d['telephone'], 'sexe' => $d['sexe'],
+        ]);
+        return ['id' => (int)$db->lastInsertId(), 'motDePasse' => $motDePasse];
+    }
+
+    public static function modifierPersonnel(int $id, array $d): void {
+        $stmt = Database::getConnection()->prepare("
+            UPDATE PERSONNE SET ID_ROLE = :role, NOM = :nom, PRENOM = :prenom, EMAIL = :email, TELEPHONE = :tel, SEXE = :sexe WHERE ID_PERSONNE = :id
+        ");
+        $stmt->execute(['role' => $d['id_role'], 'nom' => $d['nom'], 'prenom' => $d['prenom'], 'email' => $d['email'],
+                        'tel' => $d['telephone'], 'sexe' => $d['sexe'], 'id' => $id]);
+    }
+
+    public static function compterAdminsActifs(): int {
+        return (int)Database::getConnection()->query("
+            SELECT COUNT(*) FROM PERSONNE p JOIN ROLE r ON r.ID_ROLE = p.ID_ROLE WHERE r.CODE_ROLE = 'ADMIN' AND p.STATUT_COMPTE = 'ACTIF'
+        ")->fetchColumn();
+    }
+
+    public static function motDePasseHash(int $id): string {
+        $stmt = Database::getConnection()->prepare("SELECT MOT_DE_PASSE FROM PERSONNE WHERE ID_PERSONNE = :id");
+        $stmt->execute(['id' => $id]);
+        return (string)$stmt->fetchColumn();
+    }
 }

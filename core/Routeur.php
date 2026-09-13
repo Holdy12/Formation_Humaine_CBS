@@ -39,6 +39,22 @@ class Routeur {
         'admin_structure'                => ['StructureController', 'index', 'structure.gerer'],
         'admin_semestre_cloturer'        => ['StructureController', 'cloturer', 'semestre.cloturer'],
         'admin_semestre_rouvrir'         => ['StructureController', 'rouvrir', 'semestre.cloturer'],
+        'admin_clubs'                    => ['ClubController', 'liste', 'club.animer'],
+        'admin_club'                     => ['ClubController', 'club', 'club.animer'],
+        'admin_club_enregistrer'         => ['ClubController', 'enregistrer', 'clubs.gerer'],
+        'admin_club_membre'              => ['ClubController', 'membre', 'club.animer'],
+        'admin_bareme'                   => ['BaremeController', 'index', 'bareme.gerer'],
+        'admin_bareme_critere'           => ['BaremeController', 'critere', 'bareme.gerer'],
+        'admin_bareme_domaine'           => ['BaremeController', 'domaine', 'bareme.gerer'],
+        'admin_bareme_parametres'        => ['BaremeController', 'parametres', 'bareme.gerer'],
+        'admin_comptes'                  => ['CompteController', 'liste', 'comptes.gerer'],
+        'admin_compte_enregistrer'       => ['CompteController', 'enregistrer', 'comptes.gerer'],
+        'admin_compte_statut'            => ['CompteController', 'statut', 'comptes.gerer'],
+        'admin_compte_reinitialiser'     => ['CompteController', 'reinitialiser', 'comptes.gerer'],
+        'admin_mon_compte'               => ['CompteController', 'monCompte', 'tableau.voir'],
+        'admin_mon_compte_coordonnees'   => ['CompteController', 'coordonnees', 'tableau.voir'],
+        'admin_mon_compte_mot_de_passe'  => ['CompteController', 'motDePasse', 'tableau.voir'],
+        'admin_mon_compte_photo'         => ['CompteController', 'photo', 'tableau.voir'],
     ];
 
     // Anciennes actions conservées pour ne casser aucun lien.

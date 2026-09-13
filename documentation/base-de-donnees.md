@@ -60,6 +60,7 @@ avec le dictionnaire des données et le document préparatoire.
 ### Ajouts pour l'espace personnel
 
 - `PERSONNE.DOIT_CHANGER_MDP` : changement de mot de passe imposé à la prochaine connexion
+- `PERSONNE.DATE_NAISSANCE` devient facultative : elle n'a pas de sens pour un compte du personnel (`ALTER TABLE PERSONNE MODIFY DATE_NAISSANCE DATE NULL` sur une base existante)
   (compte créé ou mot de passe réinitialisé par l'administration).
 - `SIGNALEMENT.DATE_AUDITION`, `NOTES_AUDITION`, `CONSEIL_DISCIPLINE` : audition et transmission
   au conseil, renseignées pendant l'instruction.

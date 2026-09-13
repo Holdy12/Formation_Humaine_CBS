@@ -58,6 +58,18 @@ class Permissions {
         return in_array(strtoupper($role), self::MATRICE[$permission] ?? [], true);
     }
 
+    public static function matrice(): array {
+        return self::MATRICE;
+    }
+
+    public static function libelles(): array {
+        return self::LIBELLES;
+    }
+
+    public static function permissionsDuRole(string $role): array {
+        return array_keys(array_filter(self::MATRICE, fn($roles) => in_array($role, $roles, true)));
+    }
+
     public static function liste(): array {
         return self::MATRICE;
     }
