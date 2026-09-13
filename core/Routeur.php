@@ -55,6 +55,9 @@ class Routeur {
         'admin_mon_compte_coordonnees'   => ['CompteController', 'coordonnees', 'tableau.voir'],
         'admin_mon_compte_mot_de_passe'  => ['CompteController', 'motDePasse', 'tableau.voir'],
         'admin_mon_compte_photo'         => ['CompteController', 'photo', 'tableau.voir'],
+        'admin_rapports'                 => ['RapportController', 'index', 'rapports.consulter'],
+        'admin_rapports_export'          => ['RapportController', 'exporter', 'rapports.consulter'],
+        'admin_journal'                  => ['JournalController', 'index', 'journal.consulter'],
     ];
 
     // Anciennes actions conservées pour ne casser aucun lien.

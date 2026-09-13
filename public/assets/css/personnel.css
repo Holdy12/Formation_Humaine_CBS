@@ -207,3 +207,33 @@ code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-siz
 .carte-repliable > summary::after { content: ''; margin-left: auto; width: 9px; height: 9px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); transition: transform 0.15s ease; }
 .carte-repliable[open] > summary { margin-bottom: 16px; }
 .carte-repliable[open] > summary::after { transform: rotate(-135deg); }
+
+/* Rapports : répartition des mentions */
+.barres-mentions { display: grid; gap: 10px; }
+.barre-mention { display: grid; grid-template-columns: 110px 1fr 36px; align-items: center; gap: 12px; font-size: 13px; }
+.barre-mention-libelle { font-weight: 500; }
+.barre-mention-piste { height: 10px; border-radius: 999px; background: var(--piste); overflow: hidden; }
+.barre-mention-remplissage { display: block; height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.4s ease; }
+.barre-mention-valeur { text-align: right; font-weight: 600; }
+@media print {
+  .sidebar, .topbar, .barre-filtres, .btn, .bascule-theme { display: none !important; }
+  .main-content { margin: 0 !important; }
+  .dashboard-card, .stat-card { break-inside: avoid; box-shadow: none; }
+}
+
+/* Tableau de bord */
+.liste-taches { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.liste-taches a { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-weight: 500; text-decoration: none; transition: border-color 0.15s ease, transform 0.15s ease; }
+.liste-taches a:hover { border-color: var(--primary); transform: translateX(2px); text-decoration: none; }
+.tache-icone { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: rgba(255, 127, 0, 0.12); color: var(--primary); flex-shrink: 0; }
+.tache-texte { flex: 1; }
+.tache-fleche { color: var(--text-muted); }
+.liste-recents { list-style: none; margin: 0; padding: 0; display: grid; }
+.liste-recents li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+.liste-recents li:last-child { border-bottom: 0; padding-bottom: 0; }
+.liste-recents li > a { display: flex; align-items: center; gap: 12px; flex: 1; color: inherit; font-weight: 400; text-decoration: none; }
+.liste-recents li > a:hover { text-decoration: none; }
+.liste-recents li > a:hover strong { color: var(--primary); }
+.recent-texte { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: 14px; }
+.recent-texte small { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-date { color: var(--text-muted); white-space: nowrap; }
