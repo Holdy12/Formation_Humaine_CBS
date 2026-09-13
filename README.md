@@ -19,6 +19,9 @@ présences, signalements, registre des points et résultats semestriels, avec un
 
 ## Installation
 
+Guide détaillé, étape par étape, avec vérifications et dépannage : `documentation/installation.md`.
+En résumé :
+
 1. Cloner le dépôt.
 2. Créer la base et charger les scripts dans l'ordre (détails dans `documentation/base-de-donnees.md`) :
    `database/schema.sql`, `database/seed.sql`, puis `database/donnees_test.sql` (facultatif, jeu d'essai).
@@ -44,7 +47,8 @@ tests/             recette automatisée (bash + curl)
 
 ## Documentation
 
-- `documentation/base-de-donnees.md` : installation de la base, historique du schéma
+- `documentation/installation.md` : installation pas à pas, lancement, mise sur un serveur, dépannage
+- `documentation/base-de-donnees.md` : scripts de la base, historique du schéma
 - `documentation/espace-etudiant.md` : conception de l'espace étudiant et délégué, règles métier, cas de test
 - `documentation/espace-personnel.md` : espace personnel (rôles, permissions, modules, règles, cas de test)
 - `documentation/courriel-resend.md` : brancher l'envoi de courriels avec Resend
