@@ -14,25 +14,27 @@
 <form method="get" action="index.php" class="barre-filtres">
     <input type="hidden" name="action" value="admin_etudiants">
     <input type="search" name="q" value="<?= htmlspecialchars($filtres['q']) ?>" placeholder="Nom, prénom, matricule ou email" class="filtre-recherche">
-    <select name="promo" class="filter-btn">
+    <select name="promo" aria-label="Promotion">
         <option value="">Toutes les promotions</option>
         <?php foreach ($promotions as $p): ?><option value="<?= (int)$p['ID_PROMO'] ?>"<?= $filtres['promo'] == $p['ID_PROMO'] ? ' selected' : '' ?>><?= htmlspecialchars($p['CODE_PROMO']) ?></option><?php endforeach; ?>
     </select>
-    <select name="niveau" class="filter-btn">
+    <select name="niveau" aria-label="Niveau">
         <option value="">Tous les niveaux</option>
         <?php foreach ($niveaux as $n): ?><option value="<?= (int)$n['ID_NIVEAU'] ?>"<?= $filtres['niveau'] == $n['ID_NIVEAU'] ? ' selected' : '' ?>><?= htmlspecialchars($n['LIBELLE_NIVEAU']) ?></option><?php endforeach; ?>
     </select>
-    <select name="filiere" class="filter-btn">
+    <select name="filiere" aria-label="Filière">
         <option value="">Toutes les filières</option>
         <?php foreach ($filieres as $f): ?><option value="<?= (int)$f['ID_FILIERE'] ?>"<?= $filtres['filiere'] == $f['ID_FILIERE'] ? ' selected' : '' ?>><?= htmlspecialchars($f['NOM_FILIERE']) ?></option><?php endforeach; ?>
     </select>
-    <select name="statut" class="filter-btn">
+    <select name="statut" aria-label="Statut du compte">
         <option value="">Actifs et inactifs</option>
         <option value="ACTIF"<?= $filtres['statut'] === 'ACTIF' ? ' selected' : '' ?>>Actifs</option>
         <option value="INACTIF"<?= $filtres['statut'] === 'INACTIF' ? ' selected' : '' ?>>Inactifs</option>
     </select>
-    <button type="submit" class="btn btn-secondaire">Filtrer</button>
-    <a href="index.php?action=admin_etudiants_export&<?= htmlspecialchars(http_build_query(array_filter($filtres))) ?>" class="btn btn-secondaire btn-petit"><?= Icone::svg('document', 14) ?> CSV</a>
+    <div class="barre-filtres-actions">
+        <button type="submit" class="btn btn-sombre"><?= Icone::svg('filtre', 15) ?> Filtrer</button>
+        <a href="index.php?action=admin_etudiants_export&<?= htmlspecialchars(http_build_query(array_filter($filtres))) ?>" class="btn btn-fantome"><?= Icone::svg('document', 15) ?> Exporter</a>
+    </div>
 </form>
 
 <div class="dashboard-card">
