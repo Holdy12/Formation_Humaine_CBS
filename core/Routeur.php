@@ -33,6 +33,12 @@ class Routeur {
         'admin_justificatif_decider'     => ['PresenceController', 'deciderJustificatif', 'justificatifs.valider'],
         'admin_assiduite'                => ['PresenceController', 'assiduite', 'assiduite.penaliser'],
         'admin_assiduite_penaliser'      => ['PresenceController', 'penaliser', 'assiduite.penaliser'],
+        'admin_points'                   => ['PointController', 'registre', 'points.consulter'],
+        'admin_points_export'            => ['PointController', 'exporter', 'points.consulter'],
+        'admin_point_corriger'           => ['PointController', 'corriger', 'points.corriger'],
+        'admin_structure'                => ['StructureController', 'index', 'structure.gerer'],
+        'admin_semestre_cloturer'        => ['StructureController', 'cloturer', 'semestre.cloturer'],
+        'admin_semestre_rouvrir'         => ['StructureController', 'rouvrir', 'semestre.cloturer'],
     ];
 
     // Anciennes actions conservées pour ne casser aucun lien.
