@@ -13,7 +13,7 @@
 
 <form method="get" action="index.php" class="barre-filtres">
     <input type="hidden" name="action" value="admin_etudiants">
-    <input type="search" name="q" value="<?= htmlspecialchars($filtres['q']) ?>" placeholder="Nom, prénom, matricule ou email" class="filtre-recherche">
+    <input type="search" name="q" aria-label="Rechercher" value="<?= htmlspecialchars($filtres['q']) ?>" placeholder="Nom, prénom, matricule ou email" class="filtre-recherche">
     <select name="promo" aria-label="Promotion">
         <option value="">Toutes les promotions</option>
         <?php foreach ($promotions as $p): ?><option value="<?= (int)$p['ID_PROMO'] ?>"<?= $filtres['promo'] == $p['ID_PROMO'] ? ' selected' : '' ?>><?= htmlspecialchars($p['CODE_PROMO']) ?></option><?php endforeach; ?>

@@ -88,4 +88,17 @@
             options.forEach(function (o) { o.classList.toggle('choisi', o.querySelector('input').checked); });
         });
     });
+
+    // Panneaux dépliables : un bouton [data-basculer="id"] affiche ou masque l'élément visé
+    document.querySelectorAll('[data-basculer]').forEach(function (bouton) {
+        var cible = document.getElementById(bouton.getAttribute('data-basculer'));
+        if (!cible) return;
+        bouton.setAttribute('aria-expanded', 'false');
+        bouton.addEventListener('click', function () {
+            var ouvert = cible.hidden;
+            cible.hidden = !ouvert;
+            bouton.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+            if (ouvert) { var champ = cible.querySelector('textarea, input:not([type=hidden])'); if (champ) champ.focus(); }
+        });
+    });
 })();

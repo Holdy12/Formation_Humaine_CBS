@@ -28,6 +28,12 @@ class PresenceController extends PersonnelController {
         $promotions = $this->promotionsDisponibles();
         $idClub = (int)$this->param('club', '0');
         $idPromo = (int)$this->param('promo', '0');
+        $cible = $this->param('cible');
+        if (str_starts_with($cible, 'promo:')) {
+            [$idPromo, $idClub] = [(int)substr($cible, 6), 0];
+        } elseif (str_starts_with($cible, 'club:')) {
+            [$idPromo, $idClub] = [0, (int)substr($cible, 5)];
+        }
         $idSeance = (int)$this->param('seance', '0');
         $saisie = [];
 
@@ -161,10 +167,14 @@ class PresenceController extends PersonnelController {
 
     public function planifier(): void {
         $this->exigerPost();
-        $idClub = (int)($_POST['club'] ?? 0);
-        $idPromo = (int)($_POST['promo'] ?? 0);
+        $cible = (string)($_POST['cible'] ?? '');
+        $idPromo = str_starts_with($cible, 'promo:') ? (int)substr($cible, 6) : 0;
+        $idClub = str_starts_with($cible, 'club:') ? (int)substr($cible, 5) : 0;
         if ($idClub === 0 && $idPromo === 0) {
-            $this->retour('admin_seances', "Choisissez un club ou une promotion.", false);
+            $this->retour('admin_seances', "Choisissez une promotion ou un club.", false);
+        }
+        if ($idPromo > 0 && $this->limiteAuClub()) {
+            $this->retour('admin_seances', "Vous ne pouvez planifier que pour les clubs que vous animez.", false);
         }
         if ($idClub > 0 && $this->limiteAuClub() && !Club::estAnimePar($idClub, $this->id())) {
             $this->retour('admin_seances', "Vous ne pouvez planifier que pour les clubs que vous animez.", false);

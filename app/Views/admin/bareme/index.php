@@ -7,42 +7,49 @@
 
 <div class="dashboard-card">
     <h3>Nouveau critère</h3>
-    <form method="post" action="index.php?action=admin_bareme_critere" class="barre-filtres" style="margin: 0;">
+    <form method="post" action="index.php?action=admin_bareme_critere" class="formulaire formulaire-large">
         <input type="hidden" name="jeton" value="<?= htmlspecialchars($jeton) ?>">
-        <select name="domaine" aria-label="Domaine" required>
-            <option value="">Domaine…</option>
-            <?php foreach ($domaines as $d): ?><option value="<?= (int)$d['ID_DOMAINE'] ?>"><?= htmlspecialchars($d['NOM_DOMAINE']) ?></option><?php endforeach; ?>
-        </select>
-        <input type="text" name="libelle" required maxlength="100" placeholder="Libellé du critère" class="filtre-recherche" aria-label="Libellé">
-        <input type="text" name="valeur" required inputmode="decimal" placeholder="Points, ex. -0,50" aria-label="Valeur en points" style="max-width: 150px;">
-        <div class="barre-filtres-actions"><button type="submit" class="btn btn-sombre"><?= Icone::svg('plus', 15) ?> Ajouter</button></div>
+        <div class="grille-champs">
+            <div class="champ">
+                <label for="nouveau-domaine">Domaine</label>
+                <select name="domaine" id="nouveau-domaine" required>
+                    <option value="">Choisir</option>
+                    <?php foreach ($domaines as $d): ?><option value="<?= (int)$d['ID_DOMAINE'] ?>"><?= htmlspecialchars($d['NOM_DOMAINE']) ?></option><?php endforeach; ?>
+                </select>
+            </div>
+            <div class="champ champ-double"><label for="nouveau-libelle">Libellé</label><input type="text" name="libelle" id="nouveau-libelle" required maxlength="100" placeholder="Ex : Usage du téléphone en cours"></div>
+            <div class="champ"><label for="nouveau-valeur">Points</label><input type="text" name="valeur" id="nouveau-valeur" required inputmode="decimal" placeholder="Ex : -0,50"><div class="aide">Négatif pour un retrait, positif pour une bonification.</div></div>
+        </div>
+        <div class="actions"><button type="submit" class="btn btn-principal"><?= Icone::svg('plus', 16) ?> Ajouter au barème</button></div>
     </form>
 </div>
 
 <?php foreach ($domaines as $d): ?>
 <div class="dashboard-card">
-    <div class="entete-carte">
-        <form method="post" action="index.php?action=admin_bareme_domaine" class="barre-filtres ligne-structure">
-            <input type="hidden" name="jeton" value="<?= htmlspecialchars($jeton) ?>">
-            <input type="hidden" name="id" value="<?= (int)$d['ID_DOMAINE'] ?>">
-            <input type="text" name="nom" value="<?= htmlspecialchars($d['NOM_DOMAINE']) ?>" required maxlength="100" aria-label="Nom du domaine" style="font-weight: 600;">
-            <button type="submit" class="btn btn-fantome btn-petit"><?= Icone::svg('valide', 14) ?> Renommer</button>
-        </form>
-        <span class="badge badge-gris"><?= htmlspecialchars($d['CODE_DOMAINE']) ?></span>
-    </div>
+    <form method="post" action="index.php?action=admin_bareme_domaine" class="entete-domaine">
+        <input type="hidden" name="jeton" value="<?= htmlspecialchars($jeton) ?>">
+        <input type="hidden" name="id" value="<?= (int)$d['ID_DOMAINE'] ?>">
+        <div class="champ champ-double">
+            <label for="domaine-<?= (int)$d['ID_DOMAINE'] ?>">Domaine <span class="badge badge-gris"><?= htmlspecialchars($d['CODE_DOMAINE']) ?></span></label>
+            <input type="text" name="nom" id="domaine-<?= (int)$d['ID_DOMAINE'] ?>" value="<?= htmlspecialchars($d['NOM_DOMAINE']) ?>" required maxlength="100">
+        </div>
+        <button type="submit" class="btn btn-fantome btn-petit"><?= Icone::svg('valide', 14) ?> Renommer</button>
+    </form>
     <?php $liste = array_filter($criteres, fn($c) => (int)$c['ID_DOMAINE'] === (int)$d['ID_DOMAINE']); ?>
     <?php if (empty($liste)): ?>
         <?= Composant::etatVide('etoile', 'Aucun critère', 'Ajoutez un critère à ce domaine avec le formulaire du haut.') ?>
     <?php else: ?>
-        <div class="liste-criteres">
+        <div class="liste-editions">
             <?php foreach ($liste as $c): ?>
-                <form method="post" action="index.php?action=admin_bareme_critere" class="ligne-critere<?= $c['ACTIF'] ? '' : ' inactif' ?>">
+                <form method="post" action="index.php?action=admin_bareme_critere" class="ligne-edition ligne-edition-formulaire<?= $c['ACTIF'] ? '' : ' inactif' ?>">
                     <input type="hidden" name="jeton" value="<?= htmlspecialchars($jeton) ?>">
                     <input type="hidden" name="id" value="<?= (int)$c['ID_CRITERE'] ?>">
-                    <input type="text" name="libelle" value="<?= htmlspecialchars($c['LIBELLE_CRITERE']) ?>" required maxlength="100" aria-label="Libellé" class="critere-libelle">
-                    <input type="text" name="valeur" value="<?= number_format((float)$c['VALEUR_POINTS'], 2, ',', '') ?>" required inputmode="decimal" aria-label="Points" class="critere-valeur <?= (float)$c['VALEUR_POINTS'] < 0 ? 'points-moins' : 'points-plus' ?>">
-                    <label class="case"><input type="checkbox" name="actif" value="1"<?= $c['ACTIF'] ? ' checked' : '' ?>><span>Actif</span></label>
-                    <button type="submit" class="btn btn-secondaire btn-petit"><?= Icone::svg('valide', 14) ?> Enregistrer</button>
+                    <div class="grille-champs grille-critere">
+                        <div class="champ champ-double"><label for="critere-<?= (int)$c['ID_CRITERE'] ?>">Libellé</label><input type="text" name="libelle" id="critere-<?= (int)$c['ID_CRITERE'] ?>" value="<?= htmlspecialchars($c['LIBELLE_CRITERE']) ?>" required maxlength="100"></div>
+                        <div class="champ"><label for="valeur-<?= (int)$c['ID_CRITERE'] ?>">Points</label><input type="text" name="valeur" id="valeur-<?= (int)$c['ID_CRITERE'] ?>" value="<?= number_format((float)$c['VALEUR_POINTS'], 2, ',', '') ?>" required inputmode="decimal" class="<?= (float)$c['VALEUR_POINTS'] < 0 ? 'points-moins' : 'points-plus' ?>"></div>
+                        <div class="champ"><label>Statut</label><label class="case"><input type="checkbox" name="actif" value="1"<?= $c['ACTIF'] ? ' checked' : '' ?>><span>Actif</span></label></div>
+                    </div>
+                    <div class="ligne-edition-actions"><button type="submit" class="btn btn-secondaire btn-petit"><?= Icone::svg('valide', 14) ?> Enregistrer</button></div>
                 </form>
             <?php endforeach; ?>
         </div>

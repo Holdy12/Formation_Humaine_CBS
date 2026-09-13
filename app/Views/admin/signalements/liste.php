@@ -14,7 +14,7 @@
 <form method="get" action="index.php" class="barre-filtres">
     <input type="hidden" name="action" value="admin_signalements">
     <?php if ($mesDossiers && $peutTousVoir): ?><input type="hidden" name="miens" value="1"><?php endif; ?>
-    <input type="search" name="q" value="<?= htmlspecialchars($filtres['q']) ?>" placeholder="Étudiant, matricule ou objet" class="filtre-recherche">
+    <input type="search" name="q" aria-label="Rechercher" value="<?= htmlspecialchars($filtres['q']) ?>" placeholder="Étudiant, matricule ou objet" class="filtre-recherche">
     <select name="statut" aria-label="Statut">
         <option value="">Tous les statuts</option>
         <?php foreach (['SOUMIS', 'EN_EXAMEN', 'ETUDIANT_ENTENDU', 'VALIDE', 'REJETE', 'ANNULE', 'CLOTURE'] as $st): ?>

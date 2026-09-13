@@ -17,62 +17,34 @@
     </div>
 <?php endif; ?>
 
-<div class="grille-2">
-    <div class="dashboard-card">
-        <h3>Nouveau compte</h3>
-        <form method="post" action="index.php?action=admin_compte_enregistrer" class="formulaire">
-            <input type="hidden" name="jeton" value="<?= htmlspecialchars($jeton) ?>">
-            <div class="champ-ligne">
-                <div class="champ"><label for="nom">Nom</label><input type="text" name="nom" id="nom" required maxlength="50"></div>
-                <div class="champ"><label for="prenom">Prénom</label><input type="text" name="prenom" id="prenom" required maxlength="50"></div>
+<div class="dashboard-card">
+    <h3>Nouveau compte</h3>
+    <form method="post" action="index.php?action=admin_compte_enregistrer" class="formulaire formulaire-large">
+        <input type="hidden" name="jeton" value="<?= htmlspecialchars($jeton) ?>">
+        <div class="grille-champs">
+            <div class="champ"><label for="nom">Nom</label><input type="text" name="nom" id="nom" required maxlength="50"></div>
+            <div class="champ"><label for="prenom">Prénom</label><input type="text" name="prenom" id="prenom" required maxlength="50"></div>
+            <div class="champ"><label for="email">Email</label><input type="email" name="email" id="email" required maxlength="100"></div>
+            <div class="champ"><label for="telephone">Téléphone</label><input type="text" name="telephone" id="telephone" required maxlength="100"></div>
+            <div class="champ">
+                <label for="role">Rôle</label>
+                <select name="role" id="role" required>
+                    <?php foreach ($roles as $r): ?><option value="<?= (int)$r['ID_ROLE'] ?>"><?= htmlspecialchars($r['LIBELLE_ROLE']) ?></option><?php endforeach; ?>
+                </select>
             </div>
-            <div class="champ-ligne">
-                <div class="champ"><label for="email">Email</label><input type="email" name="email" id="email" required maxlength="100"></div>
-                <div class="champ"><label for="telephone">Téléphone</label><input type="text" name="telephone" id="telephone" required maxlength="100"></div>
+            <div class="champ">
+                <label for="sexe">Sexe</label>
+                <select name="sexe" id="sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
             </div>
-            <div class="champ-ligne">
-                <div class="champ">
-                    <label for="role">Rôle</label>
-                    <select name="role" id="role" required>
-                        <?php foreach ($roles as $r): ?><option value="<?= (int)$r['ID_ROLE'] ?>"><?= htmlspecialchars($r['LIBELLE_ROLE']) ?></option><?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="champ">
-                    <label for="sexe">Sexe</label>
-                    <select name="sexe" id="sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
-                </div>
-            </div>
-            <div class="actions"><button type="submit" class="btn btn-principal"><?= Icone::svg('plus', 16) ?> Créer le compte</button></div>
-        </form>
-    </div>
-
-    <div class="dashboard-card">
-        <h3>Permissions par rôle</h3>
-        <div class="defilement">
-            <table class="activity-table table-permissions">
-                <thead>
-                    <tr><th>Permission</th><?php foreach ($roles as $r): ?><th title="<?= htmlspecialchars($r['LIBELLE_ROLE']) ?>"><?= htmlspecialchars(mb_substr($r['LIBELLE_ROLE'], 0, 14)) ?></th><?php endforeach; ?></tr>
-                </thead>
-                <tbody>
-                <?php foreach ($permissions as $code => $rolesAutorises): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($libelles[$code] ?? $code) ?></td>
-                        <?php foreach ($roles as $r): ?>
-                            <td class="cellule-permission"><?= in_array($r['CODE_ROLE'], $rolesAutorises, true) ? '<span class="permission-oui">' . Icone::svg('valide', 14) . '</span>' : '<span class="permission-non">–</span>' ?></td>
-                        <?php endforeach; ?>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
         </div>
-        <div class="aide" style="margin-top: 10px;">Toute personne désignée responsable d'un club peut en faire l'appel et en gérer les membres, quel que soit son rôle.</div>
-    </div>
+        <div class="actions"><button type="submit" class="btn btn-principal"><?= Icone::svg('plus', 16) ?> Créer le compte</button></div>
+    </form>
 </div>
 
 <div class="dashboard-card">
     <form method="get" action="index.php" class="barre-filtres">
         <input type="hidden" name="action" value="admin_comptes">
-        <input type="search" name="q" value="<?= htmlspecialchars($q) ?>" placeholder="Nom, prénom ou email" class="filtre-recherche">
+        <input type="search" name="q" aria-label="Rechercher" value="<?= htmlspecialchars($q) ?>" placeholder="Nom, prénom ou email" class="filtre-recherche">
         <div class="barre-filtres-actions"><button type="submit" class="btn btn-sombre"><?= Icone::svg('filtre', 15) ?> Filtrer</button></div>
     </form>
     <?php if (empty($comptes)): ?>
@@ -90,26 +62,24 @@
                     <small class="compte-connexion"><?= $c['DERNIERE_CONNEXION'] ? 'Vu le ' . Format::dateHeure($c['DERNIERE_CONNEXION']) : 'Jamais connecté' ?></small>
                 </summary>
                 <div class="compte-detail">
-                    <form method="post" action="index.php?action=admin_compte_enregistrer" class="formulaire formulaire-large">
+                    <form method="post" action="index.php?action=admin_compte_enregistrer" class="formulaire" style="max-width: none;">
                         <input type="hidden" name="jeton" value="<?= htmlspecialchars($jeton) ?>">
                         <input type="hidden" name="id" value="<?= (int)$c['ID_PERSONNE'] ?>">
-                        <div class="champ-ligne">
-                            <div class="champ"><label>Nom</label><input type="text" name="nom" value="<?= htmlspecialchars($c['NOM']) ?>" required maxlength="50"></div>
-                            <div class="champ"><label>Prénom</label><input type="text" name="prenom" value="<?= htmlspecialchars($c['PRENOM']) ?>" required maxlength="50"></div>
-                            <div class="champ"><label>Email</label><input type="email" name="email" value="<?= htmlspecialchars($c['EMAIL']) ?>" required maxlength="100"></div>
-                        </div>
-                        <div class="champ-ligne">
-                            <div class="champ"><label>Téléphone</label><input type="text" name="telephone" value="<?= htmlspecialchars($c['TELEPHONE'] ?? '') ?>" required maxlength="100"></div>
+                        <div class="grille-champs">
+                            <div class="champ"><label for="c<?= (int)$c['ID_PERSONNE'] ?>-nom">Nom</label><input type="text" name="nom" id="c<?= (int)$c['ID_PERSONNE'] ?>-nom" value="<?= htmlspecialchars($c['NOM']) ?>" required maxlength="50"></div>
+                            <div class="champ"><label for="c<?= (int)$c['ID_PERSONNE'] ?>-prenom">Prénom</label><input type="text" name="prenom" id="c<?= (int)$c['ID_PERSONNE'] ?>-prenom" value="<?= htmlspecialchars($c['PRENOM']) ?>" required maxlength="50"></div>
+                            <div class="champ"><label for="c<?= (int)$c['ID_PERSONNE'] ?>-email">Email</label><input type="email" name="email" id="c<?= (int)$c['ID_PERSONNE'] ?>-email" value="<?= htmlspecialchars($c['EMAIL']) ?>" required maxlength="100"></div>
+                            <div class="champ"><label for="c<?= (int)$c['ID_PERSONNE'] ?>-telephone">Téléphone</label><input type="text" name="telephone" id="c<?= (int)$c['ID_PERSONNE'] ?>-telephone" value="<?= htmlspecialchars($c['TELEPHONE'] ?? '') ?>" required maxlength="100"></div>
                             <div class="champ">
-                                <label>Rôle</label>
-                                <select name="role"<?= (int)$c['ID_PERSONNE'] === Auth::idPersonne() ? ' disabled' : '' ?>>
+                                <label for="c<?= (int)$c['ID_PERSONNE'] ?>-role">Rôle</label>
+                                <select name="role" id="c<?= (int)$c['ID_PERSONNE'] ?>-role"<?= (int)$c['ID_PERSONNE'] === Auth::idPersonne() ? ' disabled' : '' ?>>
                                     <?php foreach ($roles as $r): ?><option value="<?= (int)$r['ID_ROLE'] ?>"<?= (int)$r['ID_ROLE'] === (int)$c['ID_ROLE'] ? ' selected' : '' ?>><?= htmlspecialchars($r['LIBELLE_ROLE']) ?></option><?php endforeach; ?>
                                 </select>
                                 <?php if ((int)$c['ID_PERSONNE'] === Auth::idPersonne()): ?><input type="hidden" name="role" value="<?= (int)$c['ID_ROLE'] ?>"><?php endif; ?>
                             </div>
                             <div class="champ">
-                                <label>Sexe</label>
-                                <select name="sexe"><option value="M"<?= $c['SEXE'] === 'M' ? ' selected' : '' ?>>Masculin</option><option value="F"<?= $c['SEXE'] === 'F' ? ' selected' : '' ?>>Féminin</option></select>
+                                <label for="c<?= (int)$c['ID_PERSONNE'] ?>-sexe">Sexe</label>
+                                <select name="sexe" id="c<?= (int)$c['ID_PERSONNE'] ?>-sexe"><option value="M"<?= $c['SEXE'] === 'M' ? ' selected' : '' ?>>Masculin</option><option value="F"<?= $c['SEXE'] === 'F' ? ' selected' : '' ?>>Féminin</option></select>
                             </div>
                         </div>
                         <div class="actions"><button type="submit" class="btn btn-secondaire btn-petit"><?= Icone::svg('valide', 14) ?> Enregistrer</button></div>
@@ -132,3 +102,25 @@
         </div>
     <?php endif; ?>
 </div>
+
+<details class="dashboard-card carte-repliable">
+    <summary><h3>Permissions par rôle</h3><span class="aide">Référence : ce que chaque rôle peut faire.</span></summary>
+    <div class="defilement">
+        <table class="activity-table table-permissions">
+            <thead>
+                <tr><th>Permission</th><?php foreach ($roles as $r): ?><th><?= htmlspecialchars($r['LIBELLE_ROLE']) ?></th><?php endforeach; ?></tr>
+            </thead>
+            <tbody>
+            <?php foreach ($permissions as $code => $rolesAutorises): ?>
+                <tr>
+                    <td data-label="Permission"><?= htmlspecialchars($libelles[$code] ?? $code) ?></td>
+                    <?php foreach ($roles as $r): ?>
+                        <td data-label="<?= htmlspecialchars($r['LIBELLE_ROLE']) ?>" class="cellule-permission"><?= in_array($r['CODE_ROLE'], $rolesAutorises, true) ? '<span class="permission-oui">' . Icone::svg('valide', 15) . '</span>' : '<span class="permission-non">–</span>' ?></td>
+                    <?php endforeach; ?>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <div class="aide" style="margin-top: 10px;">Toute personne désignée responsable d'un club peut en faire l'appel et en gérer les membres, quel que soit son rôle.</div>
+</details>

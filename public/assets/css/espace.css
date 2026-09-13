@@ -11,6 +11,7 @@
   --info-fond: rgba(79, 95, 214, 0.12);
   --neutre-fond: rgba(100, 116, 139, 0.14);
   --piste: #e3e7ee;
+  --border-controle: #9aa5b4;
 }
 body.dark-mode {
   --gain: #34d399;
@@ -18,6 +19,7 @@ body.dark-mode {
   --attention: #fbbf24;
   --info: #a5b4fc;
   --piste: #334155;
+  --border-controle: #64748b;
 }
 
 /* Typographie de l'espace : police système, chiffres alignés */
@@ -179,13 +181,13 @@ body.dark-mode .bascule-curseur .icone-lune { display: block; }
 .champ textarea { min-height: 110px; resize: vertical; line-height: 1.5; }
 
 /* Listes déroulantes : menu natif, habillage maison */
-.champ select, .espace-etudiant select.filter-btn {
+.champ select, .espace-etudiant select.filter-btn, .barre-filtres select {
   appearance: none; -webkit-appearance: none;
   padding-right: 38px; cursor: pointer;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
   background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;
 }
-body.dark-mode .champ select, body.dark-mode .espace-etudiant select.filter-btn {
+body.dark-mode .champ select, body.dark-mode .espace-etudiant select.filter-btn, body.dark-mode .barre-filtres select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
 }
 .espace-etudiant select.filter-btn { padding: 8px 34px 8px 12px; font-weight: 500; font-size: 13px; border-radius: 8px; }
@@ -225,7 +227,7 @@ details > summary::-webkit-details-marker { display: none; }
 .lien-piece:hover { text-decoration: underline; }
 
 /* Blocs de détail */
-.grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+.grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; align-items: start; }
 .details { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
 .detail { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 14px; }
 .detail .cle { display: block; font-size: 11.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.1px; }
@@ -263,7 +265,8 @@ details[open] > .depot-formulaire { animation: apparition 0.22s ease-out; }
 
 /* Profil */
 .grille-profil { display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: start; margin-bottom: 30px; }
-.colonne-profil { display: grid; gap: 20px; }
+.colonne-profil { display: grid; gap: 20px; align-content: start; }
+.colonne-profil > .dashboard-card { margin-bottom: 0; }
 .carte-identite { text-align: center; }
 .avatar-profil { width: 112px; height: 112px; margin: 6px auto 14px; background: rgba(255, 127, 0, 0.12); color: var(--primary); }
 .espace-etudiant .dashboard-card h3.identite-nom { display: block; text-align: center; margin-bottom: 4px; font-size: 18px; }

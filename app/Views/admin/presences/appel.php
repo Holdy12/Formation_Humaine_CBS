@@ -7,23 +7,28 @@
 
 <form method="get" action="index.php" class="barre-filtres">
     <input type="hidden" name="action" value="admin_appel">
-    <?php if (!empty($promotions)): ?>
-    <select name="promo" aria-label="Promotion" onchange="this.form.submit()">
-        <option value="">Promotion…</option>
-        <?php foreach ($promotions as $p): ?><option value="<?= (int)$p['ID_PROMO'] ?>"<?= $idPromo === (int)$p['ID_PROMO'] ? ' selected' : '' ?>><?= htmlspecialchars($p['CODE_PROMO']) ?></option><?php endforeach; ?>
-    </select>
-    <?php endif; ?>
-    <select name="club" aria-label="Club" onchange="this.form.submit()">
-        <option value="">Club…</option>
-        <?php foreach ($clubs as $c): ?><option value="<?= (int)$c['ID_CLUB'] ?>"<?= $idClub === (int)$c['ID_CLUB'] ? ' selected' : '' ?>><?= htmlspecialchars($c['NOM_CLUB']) ?></option><?php endforeach; ?>
-    </select>
+    <label class="filtre-groupe"><span>Cible</span>
+        <select name="cible" onchange="this.form.submit()">
+            <option value="">Choisir</option>
+            <?php if (!empty($promotions)): ?>
+            <optgroup label="Promotions">
+                <?php foreach ($promotions as $p): ?><option value="promo:<?= (int)$p['ID_PROMO'] ?>"<?= $idPromo === (int)$p['ID_PROMO'] ? ' selected' : '' ?>><?= htmlspecialchars($p['CODE_PROMO'] . ', ' . $p['LIBELLE_NIVEAU'] . ' ' . $p['NOM_FILIERE']) ?></option><?php endforeach; ?>
+            </optgroup>
+            <?php endif; ?>
+            <optgroup label="Clubs">
+                <?php foreach ($clubs as $c): ?><option value="club:<?= (int)$c['ID_CLUB'] ?>"<?= $idClub === (int)$c['ID_CLUB'] ? ' selected' : '' ?>><?= htmlspecialchars($c['NOM_CLUB']) ?></option><?php endforeach; ?>
+            </optgroup>
+        </select>
+    </label>
     <?php if (!empty($seancesPretes)): ?>
-    <select name="seance" aria-label="Séance planifiée" onchange="this.form.submit()">
-        <option value="">Nouvelle séance</option>
-        <?php foreach ($seancesPretes as $s): ?>
-            <option value="<?= (int)$s['ID_SEANCE'] ?>"<?= $seance && (int)$seance['ID_SEANCE'] === (int)$s['ID_SEANCE'] ? ' selected' : '' ?>><?= htmlspecialchars($s['TITRE_SEANCE']) ?>, <?= Format::date($s['DATE_SEANCE']) ?></option>
-        <?php endforeach; ?>
-    </select>
+    <label class="filtre-groupe"><span>Séance</span>
+        <select name="seance" onchange="this.form.submit()">
+            <option value="">Nouvelle séance</option>
+            <?php foreach ($seancesPretes as $s): ?>
+                <option value="<?= (int)$s['ID_SEANCE'] ?>"<?= $seance && (int)$seance['ID_SEANCE'] === (int)$s['ID_SEANCE'] ? ' selected' : '' ?>><?= htmlspecialchars($s['TITRE_SEANCE']) ?>, <?= Format::date($s['DATE_SEANCE']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
     <?php endif; ?>
 </form>
 
