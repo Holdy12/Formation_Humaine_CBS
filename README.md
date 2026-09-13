@@ -3,6 +3,14 @@
 Application web de gestion et d'évaluation de la Formation Humaine des étudiants du CBS :
 présences, signalements, registre des points et résultats semestriels, avec un espace par rôle.
 
+- **Espace étudiant et délégué** : solde de points et détail par domaine, présences et dépôt de
+  justificatifs, réponse aux signalements, résultats, club, profil, relevé imprimable ; le délégué
+  fait l'appel de sa promotion et signale un comportement.
+- **Espace personnel** (administrateur, responsable FH, chargé de discipline, enseignant,
+  responsables de club) : étudiants et import CSV, signalements et instruction, appel, séances,
+  justificatifs, assiduité, registre des points et corrections, clubs, structure académique et
+  clôture des semestres, barème et paramètres, comptes, rapports et exports, journal.
+
 ## Prérequis
 
 - PHP 8.1 ou plus, avec les extensions `pdo_mysql` et `fileinfo`
@@ -22,10 +30,10 @@ Compte administrateur initial : `admin@formation.local` / `Admin123!` (à change
 ## Structure
 
 ```
-app/Controllers/   traitement des requêtes
+app/Controllers/   traitement des requêtes ; Admin/ pour l'espace personnel
 app/Models/        accès aux données (PDO, requêtes préparées)
-app/Views/         pages HTML ; partials/ pour le gabarit commun ; erreur.php pour les pages d'erreur
-core/              session et garde par rôle, fichiers envoyés, icônes, composants partagés
+app/Views/         pages HTML : etudiant/, admin/, auth/ ; partials/ pour le gabarit commun ; erreur.php
+core/              session, permissions et routage, journal, fichiers envoyés, icônes, composants
 config/            connexion à la base
 database/          schéma, données de référence, données de test
 documentation/     documentation fonctionnelle et technique
@@ -36,9 +44,9 @@ tests/             recette automatisée (bash + curl)
 
 ## Documentation
 
-- `documentation/base-de-donnees.md` : installation de la base, historique du schéma, points à corriger
+- `documentation/base-de-donnees.md` : installation de la base, historique du schéma
 - `documentation/espace-etudiant.md` : conception de l'espace étudiant et délégué, règles métier, cas de test
-- `documentation/espace-personnel.md` : conception de l'espace personnel (rôles, permissions, modules)
+- `documentation/espace-personnel.md` : espace personnel (rôles, permissions, modules, règles, cas de test)
 - `documentation/courriel-resend.md` : brancher l'envoi de courriels avec Resend
 - `documentation/tests.md` : lancer la recette `tests/recette.sh`
 
@@ -48,7 +56,7 @@ tests/             recette automatisée (bash + curl)
 bash tests/recette.sh
 ```
 
-Recharge la base de test et rejoue les cas de l'espace étudiant contre l'instance locale (voir `documentation/tests.md`).
+Recharge la base de test et rejoue les cas des deux espaces contre l'instance locale (voir `documentation/tests.md`).
 
 ## Conventions
 

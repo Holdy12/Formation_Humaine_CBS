@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Recette de l'espace étudiant : rejoue les cas de documentation/espace-etudiant.md
+# Recette : rejoue les cas de documentation/espace-etudiant.md et documentation/espace-personnel.md
 # contre une instance locale. Voir documentation/tests.md.
 #
 # Variables d'environnement (facultatives) :
@@ -44,12 +44,12 @@ fi
 
 echo "--- syntaxe PHP ---"
 ERR=0
-for f in core/*.php app/Models/*.php app/Controllers/*.php app/Views/etudiant/*.php app/Views/partials/*.php app/Views/erreur.php public/index.php; do
+for f in core/*.php app/Models/*.php app/Controllers/*.php app/Controllers/Admin/*.php app/Views/etudiant/*.php app/Views/admin/*/*.php app/Views/auth/*.php app/Views/partials/*.php app/Views/erreur.php public/index.php; do
     "$PHP" -l "$f" | grep -q "No syntax errors" || { echo "  erreur : $f"; ERR=1; }
 done
 [ $ERR = 0 ] && echo "  aucune erreur de syntaxe"
 
-echo "--- cas de test ---"
+echo "--- cas de test : espace étudiant ---"
 R=$(connexion m CBS2026-0002 'Test1234!'); verif "1  connexion Moussa vers son tableau de bord" "${R##*action=}" "etudiant_dashboard"
 verif "1b solde de Moussa 19,75" "$(page m etudiant_dashboard | grep -c '19,75<small>/ 20,00')" "1"
 R=$(connexion a CBS2026-0001 'Test1234!'); verif "2  connexion Awa vers son tableau de bord" "${R##*action=}" "etudiant_dashboard"
@@ -101,5 +101,71 @@ curl -s -b "$TMP/a2.txt" -o /dev/null -F "jeton=$JET" -F "retirer=1" "$URL?actio
 verif "21b photo retirée" "$(sql "SELECT PHOTO IS NULL FROM PERSONNE WHERE ID_PERSONNE=5")" "1"
 verif "22 relevé imprimable" "$(page a2 etudiant_releve | grep -c 'class="releve-entete"')" "1"
 verif "23 aucune erreur PHP sur les pages" "$(for p in dashboard points presences signalements resultats club profil parametres releve appel signaler; do page a2 etudiant_$p; done | grep -ci 'warning\|fatal\|notice\|deprecated')" "0"
+echo "--- cas de test : espace personnel ---"
+connexion enock enock.panda@cbs.local 'Test1234!' >/dev/null; connexion mar marie.tchoua@cbs.local 'Test1234!' >/dev/null
+connexion idriss idriss.mahamat@cbs.local 'Test1234!' >/dev/null; connexion sylvie sylvie.ndouba@cbs.local 'Test1234!' >/dev/null
+R=$(connexion enock2 enock.panda@cbs.local 'Test1234!'); verif "P1  connexion du personnel vers son tableau de bord" "${R##*action=}" "admin_dashboard"
+verif "P2  droits : Marie refusée sur les justificatifs, admise sur l'appel" "$(curl -s -b "$TMP/mar.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_justificatifs") $(curl -s -b "$TMP/mar.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_appel")" "403 200"
+verif "P3  Marie ne voit que ses propres signalements" "$(page mar admin_signalements | grep -c 'Perturbation en cours') $(page mar admin_signalements | grep -c 'Participation au nettoyage')" "1 0"
+JET=$(page adm admin_etudiant_nouveau | jeton)
+curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "nom=Test" --data-urlencode "prenom=Recette" --data-urlencode "sexe=F" --data-urlencode "date_naissance=2005-01-01" --data-urlencode "email=recette.test@cbs.local" --data-urlencode "telephone=+235 60 00 00 00" --data-urlencode "adresse=" --data-urlencode "id_promo=1" --data-urlencode "id_club=" "$URL?action=admin_etudiant_nouveau"
+verif "P4  création d'un étudiant : matricule, compte actif, mot de passe à changer" "$(sql "SELECT CONCAT(MATRICULE LIKE 'CBS2026-%', ':', STATUT_COMPTE, ':', DOIT_CHANGER_MDP) FROM PERSONNE WHERE EMAIL='recette.test@cbs.local'")" "1:ACTIF:1"
+IDN=$(sql "SELECT ID_PERSONNE FROM PERSONNE WHERE EMAIL='recette.test@cbs.local'"); MAT=$(sql "SELECT MATRICULE FROM PERSONNE WHERE ID_PERSONNE=$IDN")
+MDP=$(page adm "admin_etudiant&id=$IDN" | grep -o 'Mot de passe temporaire de [^<]*<code>[^<]*' | sed 's/.*<code>//')
+R=$(connexion rec "$MAT" "$MDP"); verif "P4b première connexion : changement de mot de passe imposé" "${R##*action=}" "premiere_connexion"
+JET=$(page mar admin_signalement_nouveau | jeton)
+curl -s -b "$TMP/mar.txt" -o /dev/null -F "jeton=$JET" -F "promo=1" -F "etudiants[]=5" -F "etudiants[]=6" -F "critere=4" -F "titre=Tricherie au devoir" -F "date_faits=2026-09-11T10:00" -F "lieu=Salle B2" -F "description=Antiseches trouvees." -F "temoin_nom[]=SARR" -F "temoin_prenom[]=Fatou" -F "temoin_contact[]=" "$URL?action=admin_signalement_nouveau"
+verif "P5  signalement collectif : un dossier par étudiant, témoin copié" "$(sql "SELECT CONCAT(COUNT(*), ':', (SELECT COUNT(*) FROM TEMOIN t JOIN SIGNALEMENT s2 ON s2.ID_SIGNALEMENT=t.ID_SIGNALEMENT WHERE s2.TITRE_SIGNALEMENT='Tricherie au devoir')) FROM SIGNALEMENT WHERE TITRE_SIGNALEMENT='Tricherie au devoir'")" "2:2"
+D1=$(sql "SELECT MIN(ID_SIGNALEMENT) FROM SIGNALEMENT WHERE TITRE_SIGNALEMENT='Tricherie au devoir'"); JET=$(page mar "admin_signalement&id=$D1" | jeton)
+verif "P6  l'auteur ne peut pas instruire son dossier" "$(curl -s -b "$TMP/mar.txt" -o /dev/null -w '%{http_code}' --data-urlencode "jeton=$JET" "$URL?action=admin_signalement_ouvrir&id=$D1")" "403"
+JET=$(page enock "admin_signalement&id=$D1" | jeton); curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" "$URL?action=admin_signalement_ouvrir&id=$D1"
+verif "P7  retrait de points refusé avant audition" "$(curl -s -b "$TMP/enock.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "decision=VALIDE" --data-urlencode "motif=x" "$URL?action=admin_signalement_decider&id=$D1" | grep -c 'alerte-erreur') $(sql "SELECT COUNT(*) FROM MOUVEMENT_POINTS WHERE ID_SIGNALEMENT=$D1")" "1 0"
+curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "date_audition=2026-09-12T09:00" --data-urlencode "notes_audition=Reconnait les faits." "$URL?action=admin_signalement_audition&id=$D1"
+curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "decision=VALIDE" --data-urlencode "motif=Faits etablis." --data-urlencode "conseil=1" "$URL?action=admin_signalement_decider&id=$D1"
+verif "P8  audition puis validation avec conseil : deux retraits datés des faits" "$(sql "SELECT CONCAT(s.STATUT, ':', COUNT(m.ID_MOUVEMENT), ':', SUM(m.NOMBRE_POINTS), ':', MIN(DATE(m.DATE_MOUVEMENT))) FROM SIGNALEMENT s JOIN MOUVEMENT_POINTS m ON m.ID_SIGNALEMENT=s.ID_SIGNALEMENT WHERE s.ID_SIGNALEMENT=$D1")" "VALIDE:2:5.00:2026-09-11"
+verif "P8b seconde décision refusée" "$(curl -s -b "$TMP/enock.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "decision=REJETE" --data-urlencode "motif=x" "$URL?action=admin_signalement_decider&id=$D1" | grep -c 'décision a déjà été rendue')" "1"
+JET=$(page sylvie admin_signalement_nouveau | jeton)
+curl -s -b "$TMP/sylvie.txt" -o /dev/null -F "jeton=$JET" -F "promo=2" -F "etudiants[]=7" -F "critere=22" -F "titre=Concours de plaidoirie" -F "date_faits=2026-09-11T10:00" -F "lieu=Amphi" -F "description=Participation."  "$URL?action=admin_signalement_nouveau"
+D2=$(sql "SELECT ID_SIGNALEMENT FROM SIGNALEMENT WHERE TITRE_SIGNALEMENT='Concours de plaidoirie'"); JET=$(page enock "admin_signalement&id=$D2" | jeton)
+verif "P9  bonification au-delà du plafond refusée" "$(curl -s -b "$TMP/enock.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "decision=VALIDE" --data-urlencode "motif=x" "$URL?action=admin_signalement_decider&id=$D2" | grep -c 'Plafond du domaine') $(sql "SELECT STATUT FROM SIGNALEMENT WHERE ID_SIGNALEMENT=$D2")" "1 SOUMIS"
+JET=$(page enock admin_justificatifs | jeton); IDJ=$(sql "SELECT ID_JUSTIFICATION FROM JUSTIFICATION_ABSENCE WHERE STATUT_VALIDATION='EN_ATTENTE' ORDER BY ID_JUSTIFICATION LIMIT 1")
+verif "P10 rejet d'un justificatif sans commentaire refusé" "$(curl -s -b "$TMP/enock.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "id=$IDJ" --data-urlencode "decision=rejeter" --data-urlencode "commentaire=" "$URL?action=admin_justificatif_decider" | grep -c 'pourquoi le justificatif est rejeté')" "1"
+curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "id=$IDJ" --data-urlencode "decision=valider" --data-urlencode "commentaire=Recevable." "$URL?action=admin_justificatif_decider"
+verif "P11 justificatif validé : absence justifiée, visible par l'étudiant" "$(sql "SELECT CONCAT(j.STATUT_VALIDATION, ':', p.STATUT) FROM JUSTIFICATION_ABSENCE j JOIN PRESENCE p ON p.ID_PRESENCE=j.ID_PRESENCE WHERE j.ID_JUSTIFICATION=$IDJ") $(page m etudiant_presences | grep -c 'Recevable.')" "VALIDEE:ABSENT_JUSTIFIE 1"
+JET=$(page idriss admin_appel | jeton)
+verif "P12 un responsable de club ne fait pas l'appel d'une promotion" "$(curl -s -b "$TMP/idriss.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "promo=1" --data-urlencode "club=0" --data-urlencode "seance=0" --data-urlencode "titre=x" --data-urlencode "date=2026-09-12" --data-urlencode "debut=08:00" --data-urlencode "fin=10:00" --data-urlencode "lieu=x" "$URL?action=admin_appel" | grep -c 'que pour les clubs que vous animez')" "1"
+IDS=$(sql "SELECT ID_SEANCE FROM SEANCE WHERE TITRE_SEANCE='Sortie reboisement'")
+verif "P12b appel d'une séance à venir refusé" "$(curl -s -b "$TMP/idriss.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "seance=$IDS" --data-urlencode "club=1" --data-urlencode "statut[6]=PRESENT" "$URL?action=admin_appel" | grep -c 'pas encore eu lieu')" "1"
+A=$(page enock admin_assiduite); JET=$(echo "$A" | jeton); IDS_P=$(echo "$A" | grep -o 'name="presences\[\]" value="[0-9]*"' | grep -o '[0-9]*' | paste -sd,)
+ARGS=""; for i in $(echo "$IDS_P" | tr ',' ' '); do ARGS="$ARGS --data-urlencode presences[]=$i"; done
+curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" $ARGS "$URL?action=admin_assiduite_penaliser"
+verif "P13 pénalités d'assiduité appliquées une seule fois par présence" "$(sql "SELECT COUNT(*) FROM MOUVEMENT_POINTS WHERE ID_PRESENCE IS NOT NULL") $(curl -s -b "$TMP/enock.txt" -L --data-urlencode "jeton=$JET" $ARGS "$URL?action=admin_assiduite_penaliser" | grep -c '0 pénalité(s) appliquée(s)')" "$(echo "$IDS_P" | tr ',' '\n' | grep -c .) 1"
+IDM=$(sql "SELECT ID_MOUVEMENT FROM MOUVEMENT_POINTS WHERE TYPE_MOUVEMENT='NEGATIF' ORDER BY ID_MOUVEMENT LIMIT 1"); JET=$(page adm admin_points | jeton)
+curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "mouvement=$IDM" --data-urlencode "motif=Erreur de saisie" "$URL?action=admin_point_corriger"
+verif "P14 correction par écriture inverse, une seule fois" "$(sql "SELECT CONCAT(TYPE_MOUVEMENT, ':', NOMBRE_POINTS) FROM MOUVEMENT_POINTS WHERE ID_MOUVEMENT_CORRIGE=$IDM") $(curl -s -b "$TMP/adm.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "mouvement=$IDM" --data-urlencode "motif=x" "$URL?action=admin_point_corriger" | grep -c 'déjà été corrigé')" "POSITIF:0.25 1"
+verif "P15 export CSV du registre avec BOM et point-virgule" "$(page adm admin_points_export | head -c 3 | od -An -tx1 | tr -d ' ') $(page adm admin_points_export | head -1 | grep -c 'Date;Matricule')" "efbbbf 1"
+JET=$(page adm admin_structure | jeton)
+curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "semestre=1" "$URL?action=admin_semestre_cloturer"
+NB=$(sql "SELECT COUNT(*) FROM ETUDIANT e JOIN PERSONNE p ON p.ID_PERSONNE=e.ID_PERSONNE WHERE p.STATUT_COMPTE='ACTIF'")
+verif "P16 clôture : notes figées, mention, étudiant informé" "$(sql "SELECT CONCAT(COUNT(*), ':', SUM(STATUT_VALIDATION='CLOTURE'), ':', SUM(MENTION IS NOT NULL)) FROM RESULTAT_SEMESTRIEL WHERE ID_SEMESTRE=1") $(page m etudiant_resultats | grep -c 'Semestre en cours')" "$NB:$NB:$NB 0"
+verif "P16b écriture refusée sur un semestre clôturé" "$(curl -s -b "$TMP/adm.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "mouvement=3" --data-urlencode "motif=x" "$URL?action=admin_point_corriger" | grep -c 'est clôturé')" "1"
+curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "semestre=1" "$URL?action=admin_semestre_rouvrir"
+verif "P16c réouverture" "$(sql "SELECT DISTINCT STATUT_VALIDATION FROM RESULTAT_SEMESTRIEL WHERE ID_SEMESTRE=1")" "PROVISOIRE"
+verif "P17 suppression d'une promotion rattachée refusée" "$(curl -s -b "$TMP/adm.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "op=supprimer" --data-urlencode "id=1" "$URL?action=admin_structure&entite=promotion" | grep -c 'Suppression impossible')" "1"
+JET=$(page adm admin_clubs | jeton)
+curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "nom=Club Recette" --data-urlencode "description=" --data-urlencode "responsable=3" "$URL?action=admin_club_enregistrer"
+connexion mar2 marie.tchoua@cbs.local 'Test1234!' >/dev/null
+verif "P18 une enseignante désignée responsable accède à son club" "$(page mar2 admin_clubs | grep -c 'Club Recette') $(curl -s -b "$TMP/mar2.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_club&id=1")" "1 403"
+JET=$(page adm admin_bareme | jeton)
+curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "valeur[PLAFOND_BONUS_ECOLOGIE]=4" "$URL?action=admin_bareme_parametres"
+verif "P19 paramètre modifié et pris en compte" "$(sql "SELECT VALEUR FROM PARAMETRE_SYSTEME WHERE CODE_PARAMETRE='PLAFOND_BONUS_ECOLOGIE'") $(curl -s -b "$TMP/adm.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "valeur[PLAFOND_BONUS_ECOLOGIE]=-1" "$URL?action=admin_bareme_parametres" | grep -c 'nombre positif')" "4 1"
+JET=$(page adm admin_comptes | jeton)
+curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "nom=Bemba" --data-urlencode "prenom=Paul" --data-urlencode "email=paul.bemba@cbs.local" --data-urlencode "telephone=+235 60 00 00 09" --data-urlencode "role=4" --data-urlencode "sexe=M" "$URL?action=admin_compte_enregistrer"
+MDP=$(page adm admin_comptes | grep -o '<code class="mdp">[^<]*' | sed 's/.*>//')
+R=$(connexion paul paul.bemba@cbs.local "$MDP"); verif "P20 compte du personnel créé, mot de passe temporaire, première connexion" "$(sql "SELECT CONCAT(NOM, ':', DOIT_CHANGER_MDP) FROM PERSONNE WHERE EMAIL='paul.bemba@cbs.local'") ${R##*action=}" "BEMBA:1 premiere_connexion"
+verif "P20b l'administrateur ne peut pas se désactiver" "$(curl -s -b "$TMP/adm.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "id=1" "$URL?action=admin_compte_statut" | grep -c 'votre propre compte')" "1"
+verif "P21 rapports et exports" "$(page adm admin_rapports | grep -c 'Répartition des mentions') $(curl -s -b "$TMP/adm.txt" "$URL?action=admin_rapports_export&type=soldes" | head -1 | grep -c 'Matricule;Nom')" "1 1"
+verif "P22 journal : actions attribuées, accès réservé" "$(page adm admin_journal | grep -c 'badge-bleu') $(curl -s -b "$TMP/enock.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_journal")" "$(page adm admin_journal | grep -c 'badge-bleu') 403"
+verif "P23 aucune erreur PHP sur les pages du personnel" "$(for p in admin_dashboard admin_etudiants "admin_etudiant&id=6" admin_etudiant_nouveau admin_etudiants_import admin_signalements admin_signalement_nouveau "admin_signalement&id=$D1" admin_appel admin_seances admin_justificatifs admin_assiduite admin_points "admin_structure&entite=semestre" admin_clubs "admin_club&id=1" admin_bareme admin_comptes admin_mon_compte admin_rapports admin_journal; do page adm "$p"; done | grep -ci 'warning\|fatal\|notice\|deprecated')" "0"
 echo "--- résultat : $OK ok, $KO ko ---"
 [ $KO = 0 ]

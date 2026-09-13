@@ -14,7 +14,7 @@
 <?php endforeach; ?>
 
 <?php
-    $seuil = 10.0;
+    $seuil = Parametre::nombre('SEUIL_CRITIQUE_NOTE', 10);
     $critique = $solde['solde'] < $seuil;
     $pourcentage = $solde['maximum'] > 0 ? round($solde['solde'] / $solde['maximum'] * 100, 1) : 0;
     $positionSeuil = $solde['maximum'] > 0 ? round($seuil / $solde['maximum'] * 100, 1) : 0;
@@ -62,8 +62,9 @@
                         <?php if ($d['POSITIF'] == 0 && $d['NEGATIF'] == 0): ?>
                             aucun mouvement<?php if ($d['PLAFOND'] !== null): ?>, plafond +<?= Format::points($d['PLAFOND']) ?><?php endif; ?>
                         <?php else: ?>
-                            <span class="plus">+<?= Format::points($d['BONUS_RETENU']) ?></span><?php if ($d['PLAFOND'] !== null): ?> sur <?= Format::points($d['PLAFOND']) ?><?php endif; ?>
-                            · <span class="moins">−<?= Format::points($d['NEGATIF']) ?></span>
+                            <?php if ($d['POSITIF'] > 0): ?><span class="plus">+<?= Format::points($d['BONUS_RETENU']) ?></span><?php if ($d['PLAFOND'] !== null): ?> sur <?= Format::points($d['PLAFOND']) ?><?php endif; ?><?php endif; ?>
+                            <?php if ($d['POSITIF'] > 0 && $d['NEGATIF'] > 0): ?> · <?php endif; ?>
+                            <?php if ($d['NEGATIF'] > 0): ?><span class="moins">−<?= Format::points($d['NEGATIF']) ?></span><?php endif; ?>
                         <?php endif; ?>
                     </span>
                 </div>

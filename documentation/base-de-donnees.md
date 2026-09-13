@@ -73,19 +73,9 @@ avec le dictionnaire des données et le document préparatoire.
 - `config/database.php` fixe le fuseau horaire de PHP (`Africa/Ndjamena`) et de la connexion
   MySQL (`+01:00`), afin que les délais soient calculés de la même façon des deux côtés.
 
-## Corrections restant à faire côté administration
+## Historique des corrections côté administration
 
-1. `AdminDashboardController::getDashboardData` : `j.ADESSE_IP` → `j.ADRESSE_IP`.
-2. `AdminDashboardController::etudiants` : retirer `pr.NIVEAU` et `pr.FILIERE` des deux
-   `COALESCE` (ces colonnes n'existent pas, la requête bascule sur le secours qui affiche
-   « Licence 1 » pour tout le monde).
-3. `AdminDashboardController::getDashboardData` : les points sont des décimaux, les `(int)`
-   sur `pos` / `neg` transforment 0,25 en 0 → utiliser `(float)`. Et ajouter `unset($row);`
-   après la boucle `foreach ($domainesStats as &$row)` : sans cela, la boucle suivante
-   `foreach ($resultEvo as $row)` écrase le dernier domaine du tableau.
-4. `app/Views/admin/etudiants.php` : les liens *Modifier* et *Supprimer* passent
-   `ID_PERSONNE` alors que `update()` et `delete()` cherchent par `ID_ETUDIANT`. Sélectionner
-   `e.ID_ETUDIANT` dans la requête de la liste et l'utiliser dans ces deux liens.
-
-`AuthController` accepte encore le mot de passe `password` pour n'importe quel compte
-(raccourci de développement à retirer avant la démonstration).
+Les anciens contrôleurs et vues d'administration (`AdminDashboardController`, `app/Views/admin/*.php`
+de première génération) présentaient des requêtes sur des colonnes inexistantes et un mot de passe
+de développement accepté pour tout compte. Ils ont été remplacés par l'espace personnel décrit dans
+`espace-personnel.md` ; la base ne conserve aucune trace de ces écarts.

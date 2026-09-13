@@ -156,19 +156,15 @@ Menu de l'espace personnel (entrées filtrées par permission) :
 
 ### Tableau de bord
 
-Bloc « À traiter » en tête, selon les permissions : signalements à instruire (`SOUMIS`,
-`EN_EXAMEN`), auditions à mener (`EN_EXAMEN` avec critère négatif), justificatifs en attente,
-présences à pénaliser, semestre échu non clôturé. Chaque carte mène à la liste filtrée.
+Bloc « À traiter » selon les permissions : signalements à examiner (`SOUMIS`), dossiers en
+attente de décision (`EN_EXAMEN`, `ETUDIANT_ENTENDU`), justificatifs en attente, absences et
+retards à pénaliser, séances passées sans appel (limitées aux clubs animés pour un responsable de
+club), semestres échus non clôturés. Chaque ligne mène à la page concernée.
 
-Puis, selon le rôle :
-
-- Administrateur et responsable FH : effectifs (étudiants actifs, promotions, comptes), points
-  du semestre par domaine (barres), évolution mensuelle des signalements (barres), étudiants sous
-  le seuil de 10, dernières entrées du journal.
-- Chargé de discipline : dossiers par statut, justificatifs et pénalités en attente, derniers
-  dossiers décidés.
-- Enseignant, responsables de club : mes signalements récents et leur statut, mes derniers appels,
-  mon club (membres, prochaines séances).
+Chiffres clés : dossiers ouverts, étudiants actifs, note moyenne du semestre en cours, étudiants
+sous le seuil critique (`SEUIL_CRITIQUE_NOTE`), ou « mes signalements » pour un rôle sans accès
+global. Puis, selon le rôle : synthèse par promotion, derniers signalements (tous ou les siens),
+activité récente du journal, clubs animés avec accès direct à l'appel.
 
 ### Étudiants
 
@@ -240,8 +236,10 @@ Puis, selon le rôle :
 
 ### Clubs et séances
 
-- Clubs : création, description, responsable (personne du rôle `RESPONSABLE_CLUB` ou
-  `RESPONSABLE_ENV`), effectif.
+- Clubs : création, description, responsable (toute personne du personnel hors administrateur
+  simple : responsable de club, responsable environnement, enseignant, responsable FH), effectif.
+  La permission `club.animer` est acquise par le rôle ou par la désignation comme responsable
+  d'un club, quel que soit le rôle (`Auth::peut()`).
 - Membres : ajout et retrait d'étudiants (sélecteur avec recherche), par le responsable du club
   ou l'administration.
 - Séances du club : planification et appel (voir Présences).
@@ -312,7 +310,26 @@ Ajouts, tous facultatifs pour les lignes existantes :
 Mêmes principes que l'espace étudiant : gabarit commun, icônes SVG, états vides, messages après
 chaque action, pages d'erreur, adaptation au téléphone, mode sombre, sélecteurs avec recherche,
 zones de dépôt de fichier, listes paginées, filtres conservés dans l'adresse (partageables).
-Les graphiques du tableau de bord sont rendus sans bibliothèque externe.
+
+Conventions de formulaire, appliquées partout :
+
+- chaque champ porte une étiquette visible (ou `aria-label` dans une barre de filtres où le
+  texte de remplacement suffit) ; les périodes sont saisies dans un groupe « Du … au … » ;
+- les champs d'une même barre ou d'une même grille ont la même hauteur, le même fond et la même
+  bordure ; les listes déroulantes partagent un chevron dessiné, dans les deux thèmes ;
+- les cases à cocher et boutons radio sont dessinés (`.case`) et se distinguent nettement des
+  champs ; les choix exclusifs d'une ligne d'appel sont des pastilles (`.appel-choix`) ;
+- dans une barre de filtres, l'action principale est un bouton plein sombre (`btn-sombre`),
+  l'action secondaire un bouton discret (`btn-fantome`) ; les boutons ne ressemblent jamais aux
+  champs ;
+- les lignes éditables (structure, barème, comptes) sont des cartes `ligne-edition` avec une grille
+  de champs étiquetés et leurs actions alignées à droite ;
+- un choix entre promotion et club se fait dans une seule liste à deux groupes (« Cible ») pour
+  éviter toute sélection contradictoire ;
+- les panneaux secondaires d'un tableau (correction d'un mouvement) s'ouvrent en pleine largeur
+  sous la ligne concernée.
+
+Les rapports sont imprimables depuis le navigateur (feuille `@media print`).
 
 ## 6. Cas de test
 
@@ -320,29 +337,34 @@ Comptes de `donnees_test.sql` (mot de passe `Test1234!`) : Enock PANDA (chargé 
 Marie TCHOUA (enseignante), Idriss MAHAMAT (responsable du club environnement), plus
 `admin@formation.local` / `Admin123!`. Le jeu de test ajoute un compte responsable FH.
 
+Les cas ci-dessous sont rejoués par `tests/recette.sh` (préfixe `P`), après ceux de l'espace
+étudiant. Voir `documentation/tests.md`.
+
 | # | Scénario | Résultat attendu |
 |---|---|---|
-| 1 | Connexion avec le mot de passe `password` sur n'importe quel compte | refusée |
-| 2 | Connexion de chaque rôle du personnel | redirection vers `admin_dashboard`, menu limité aux permissions |
-| 3 | Compte désactivé | connexion refusée avec message dédié |
-| 4 | Cinq échecs puis un essai | délai imposé |
-| 5 | Enseignant ouvre `admin_structure` | page 403 |
-| 6 | Enseignant crée un signalement avec deux étudiants et une preuve | deux dossiers `SOUMIS`, pièces attachées, visibles dans « mes signalements » |
-| 7 | Enseignant tente d'instruire son propre dossier | refusé |
-| 8 | Chargé de discipline ouvre, auditionne, valide avec conseil | `ETUDIANT_ENTENDU` puis `VALIDE`, deux mouvements négatifs (critère + conseil), validateur renseigné |
-| 9 | Validation d'un retrait sans audition | refusée |
-| 10 | Validation d'une bonification qui dépasserait le plafond | refusée, montant restant indiqué |
-| 11 | Justificatif validé | `VALIDEE`, présence `ABSENT_JUSTIFIE`, commentaire visible côté étudiant |
-| 12 | Assiduité : appliquer les pénalités puis recharger la page | mouvements créés une fois, plus rien à pénaliser |
-| 13 | Écriture inverse d'un mouvement | mouvement opposé lié, solde rétabli |
-| 14 | Clôture du semestre | `RESULTAT_SEMESTRIEL` clôturé pour chaque étudiant, note finale et mention visibles côté étudiant ; réouverture possible |
-| 15 | Création d'un étudiant | matricule généré, mot de passe temporaire affiché, première connexion impose le changement |
-| 16 | Import CSV avec une ligne invalide | rapport d'erreur, aucune création tant que le fichier n'est pas corrigé |
-| 17 | Désactivation d'un étudiant | disparaît des appels, connexion refusée, historique conservé |
-| 18 | Responsable de club ajoute un membre et fait l'appel d'une séance planifiée | membre visible côté étudiant, présences enregistrées |
-| 19 | Modification du barème par le chargé de discipline | 403 |
-| 20 | Journal après ces scénarios | une entrée par action sensible, filtrable |
-| 21 | Export CSV d'un rapport | fichier UTF-8 avec BOM, une ligne par enregistrement |
+| P1 | Connexion d'un membre du personnel | redirection vers `admin_dashboard` |
+| P2 | Enseignante sur les justificatifs, puis sur l'appel | 403, puis 200 |
+| P3 | Liste des signalements pour une enseignante | seulement les dossiers qu'elle a transmis |
+| P4 | Création d'un étudiant, puis sa première connexion | matricule `CBS<année>-NNNN`, compte actif, mot de passe temporaire affiché une fois, changement imposé |
+| P5 | Signalement collectif de deux étudiants avec un témoin | deux dossiers `SOUMIS`, témoin copié sur chacun |
+| P6 | L'auteur tente d'ouvrir l'instruction de son dossier | 403 |
+| P7 | Validation d'un retrait avant audition | refusée, aucun mouvement |
+| P8 | Audition, puis validation avec conseil de discipline | `VALIDE`, deux retraits datés des faits (critère + conseil), seconde décision refusée |
+| P9 | Validation d'une bonification au-delà du plafond du domaine | refusée, dossier inchangé |
+| P10 | Rejet d'un justificatif sans commentaire | refusé |
+| P11 | Validation d'un justificatif | `VALIDEE`, présence `ABSENT_JUSTIFIE`, commentaire visible par l'étudiant |
+| P12 | Responsable de club : appel d'une promotion, puis d'une séance à venir | refusés |
+| P13 | Application groupée des pénalités d'assiduité, puis nouvel envoi | un mouvement par présence, aucune double pénalité |
+| P14 | Correction d'un mouvement, puis seconde correction | écriture inverse liée, seconde refusée |
+| P15 | Export CSV du registre | UTF-8 avec BOM, séparateur `;` |
+| P16 | Clôture du semestre, écriture pendant la clôture, réouverture | résultats figés avec mention et visibles par l'étudiant, écriture refusée, retour à `PROVISOIRE` |
+| P17 | Suppression d'une promotion avec des étudiants | refusée |
+| P18 | Enseignante désignée responsable d'un club | accès à son club, 403 sur un autre |
+| P19 | Modification d'un paramètre, puis valeur négative | prise en compte immédiate, refus |
+| P20 | Création d'un compte du personnel, première connexion, auto-désactivation | mot de passe temporaire, changement imposé, refus de se désactiver |
+| P21 | Rapports et export des notes | page et fichier CSV |
+| P22 | Journal : lecture par l'administrateur, accès du chargé de discipline | entrées attribuées, 403 |
+| P23 | Toutes les pages du personnel | aucune erreur PHP |
 
 ## 7. Évolutions prévues
 
