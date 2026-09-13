@@ -70,7 +70,7 @@ body.page-auth { display: block; overflow: auto; }
 .btn-fantome:hover { color: var(--primary); background: var(--bg-body); }
 @media (max-width: 700px) {
   .barre-filtres { flex-direction: column; align-items: stretch; }
-  .barre-filtres .filtre-recherche, .barre-filtres select { width: 100%; }
+  .barre-filtres .filtre-recherche, .barre-filtres select { flex: 0 0 auto; width: 100%; height: 40px; }
   .barre-filtres-actions { margin-left: 0; padding-left: 0; padding-top: 10px; border-left: 0; border-top: 1px solid var(--border-color); }
   .barre-filtres-actions .btn { flex: 1; justify-content: center; }
 }
@@ -85,3 +85,7 @@ body.page-auth { display: block; overflow: auto; }
 .case small { display: block; font-size: 12px; color: var(--text-muted); }
 .resultat-valeur.critique { color: var(--perte); }
 code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px; }
+
+/* Fiche : le bloc d'identité s'adapte à la largeur de sa colonne */
+.details-identite { text-align: left; margin-top: 4px; }
+.carte-identite .details-identite { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }

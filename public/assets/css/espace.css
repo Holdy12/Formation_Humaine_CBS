@@ -359,8 +359,9 @@ body.page-erreur { display: flex; align-items: center; justify-content: center; 
   .espace-etudiant .activity-table td:last-child { border-bottom: 0; }
   .espace-etudiant .activity-table td[data-label]::before { content: attr(data-label); color: var(--text-muted); font-size: 11.5px; font-weight: 600; flex-shrink: 0; text-align: left; padding-top: 2px; }
   .espace-etudiant .activity-table td:not([data-label]) { justify-content: flex-end; }
-  .espace-etudiant .activity-table td.cellule-large { display: block; text-align: left; }
-  .espace-etudiant .activity-table td.cellule-large::before { display: block; margin-bottom: 4px; }
+  .espace-etudiant .activity-table td.cellule-large, .espace-etudiant .activity-table td:has(small) { display: block; text-align: left; }
+  .espace-etudiant .activity-table td.cellule-avatar { display: none; }
+  .espace-etudiant .activity-table td.cellule-large::before, .espace-etudiant .activity-table td:has(small)::before { display: block; margin-bottom: 4px; }
   .espace-etudiant .activity-table td br { display: none; }
   .espace-etudiant .activity-table td small { display: block; }
   .depot, .depot-formulaire { min-width: 0; width: 100%; }

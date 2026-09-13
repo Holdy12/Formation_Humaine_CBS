@@ -31,7 +31,7 @@ $gere = Auth::peut('etudiants.gerer');
         <h3 class="identite-nom"><?= htmlspecialchars($etudiant['PRENOM'] . ' ' . $etudiant['NOM']) ?></h3>
         <div class="identite-statut"><?= htmlspecialchars($statutLibelle) ?></div>
         <span class="badge badge-bleu identite-matricule"><?= htmlspecialchars($etudiant['MATRICULE']) ?></span>
-        <div class="details" style="text-align: left; grid-template-columns: 1fr;">
+        <div class="details details-identite">
             <div class="detail"><span class="cle">Email</span><span class="val"><?= htmlspecialchars($etudiant['EMAIL']) ?></span></div>
             <div class="detail"><span class="cle">Téléphone</span><span class="val"><?= htmlspecialchars($etudiant['TELEPHONE']) ?></span></div>
             <div class="detail"><span class="cle">Adresse</span><span class="val"><?= $etudiant['ADRESSE'] ? htmlspecialchars($etudiant['ADRESSE']) : 'Non renseignée' ?></span></div>
