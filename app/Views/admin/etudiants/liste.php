@@ -46,7 +46,7 @@
                 <?php foreach ($etudiants as $e): ?>
                     <tr>
                         <td><span class="avatar"><?= $e['PHOTO'] ? '<img src="' . htmlspecialchars($e['PHOTO']) . '" alt="">' : Icone::svg('personne', 18) ?></span></td>
-                        <td data-label="Étudiant" class="cellule-large"><strong><?= htmlspecialchars($e['NOM'] . ' ' . $e['PRENOM']) ?></strong><?= $e['EST_DELEGUE'] ? ' <span class="badge badge-bleu">Délégué</span>' : '' ?><br><small><?= htmlspecialchars($e['MATRICULE']) ?></small></td>
+                        <td data-label="Étudiant" class="cellule-large"><strong><?= htmlspecialchars($e['NOM'] . ' ' . $e['PRENOM']) ?></strong><?= $e['EST_DELEGUE'] ? ' <span class="badge badge-bleu">' . Format::genre($e['SEXE'], 'Délégué', 'Déléguée') . '</span>' : '' ?><br><small><?= htmlspecialchars($e['MATRICULE']) ?></small></td>
                         <td data-label="Promotion"><?= htmlspecialchars($e['CODE_PROMO']) ?><br><small><?= htmlspecialchars($e['LIBELLE_NIVEAU'] . ' ' . $e['NOM_FILIERE']) ?></small></td>
                         <td data-label="Contact" class="cellule-large"><?= htmlspecialchars($e['EMAIL']) ?><br><small><?= htmlspecialchars($e['TELEPHONE']) ?></small></td>
                         <td data-label="Club"><?= $e['NOM_CLUB'] ? htmlspecialchars($e['NOM_CLUB']) : '—' ?></td>

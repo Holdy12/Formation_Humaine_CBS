@@ -46,6 +46,7 @@ switch ($action) {
     default:
         if (str_starts_with($action, 'admin_') || Routeur::estConnue($action)) {
             Routeur::traiter($action);
+            break;
         }
         Erreur::introuvable();
 }
