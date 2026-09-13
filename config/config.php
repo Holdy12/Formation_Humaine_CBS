@@ -1,6 +1,8 @@
 <?php
 // config/database.php
 
+date_default_timezone_set('Africa/Ndjamena');
+
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'formation_humaine_db');
 define('DB_USER', 'Maurer');
@@ -25,6 +27,7 @@ class Database {
                         PDO::ATTR_EMULATE_PREPARES => false,
                     ]
                 );
+                self::$instance->exec("SET time_zone = '+01:00'");
             } catch (PDOException $e) {
                 die("Erreur de connexion à la base de données : " . $e->getMessage());
             }
