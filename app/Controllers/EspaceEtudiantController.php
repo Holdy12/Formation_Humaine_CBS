@@ -246,7 +246,7 @@ class EspaceEtudiantController {
         $telephone = trim($_POST['telephone'] ?? '');
         $adresse = trim($_POST['adresse'] ?? '');
         if ($telephone === '' || mb_strlen($telephone) > 100 || mb_strlen($adresse) > 100) {
-            $this->retour('etudiant_parametres', "Le téléphone est obligatoire, 100 caractères maximum par champ.", false);
+            $this->retour('etudiant_parametres', "Le téléphone est obligatoire et chaque champ est limité à 100 caractères.", false);
         }
         Etudiant::modifierCoordonnees((int)$this->etudiant['ID_PERSONNE'], $telephone, $adresse === '' ? null : $adresse);
         $this->retour('etudiant_parametres', "Coordonnées enregistrées.");

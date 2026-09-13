@@ -39,10 +39,13 @@ class AuthController {
             $this->traiterConnexion();
         }
         $code = $_GET['erreur'] ?? '';
+        $identifiant = $_SESSION['identifiant_saisi'] ?? '';
+        unset($_SESSION['identifiant_saisi']);
         $this->vueAuth('login', 'Connexion', [
-            'message' => self::MESSAGES[$code] ?? ($code !== '' ? "Une erreur est survenue lors de la connexion." : null),
-            'succes'  => $code === 'deconnecte',
-            'jeton'   => Auth::jeton(),
+            'message'     => self::MESSAGES[$code] ?? ($code !== '' ? "Une erreur est survenue lors de la connexion." : null),
+            'succes'      => $code === 'deconnecte',
+            'identifiant' => $identifiant,
+            'jeton'       => Auth::jeton(),
         ]);
     }
 
@@ -55,6 +58,7 @@ class AuthController {
         }
         $identifiant = trim($_POST['identifiant'] ?? '');
         $motDePasse = $_POST['password'] ?? '';
+        $_SESSION['identifiant_saisi'] = mb_substr($identifiant, 0, 100);
         if ($identifiant === '' || $motDePasse === '') {
             Auth::rediriger('login', ['erreur' => 'champs_vides']);
         }

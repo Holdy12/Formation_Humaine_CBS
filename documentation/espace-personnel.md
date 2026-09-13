@@ -7,6 +7,10 @@ environnement. Un seul espace, dont le menu et les actions dépendent des permis
 Cette version remplace les premières pages d'administration (tableau de bord et gestion des
 étudiants) par des écrans construits sur les mêmes fondations que l'espace étudiant.
 
+L'application ne propose pas de création de compte en libre accès : les étudiants sont inscrits
+par l'administration, un par un ou par import, et les comptes du personnel sont créés par
+l'administrateur. L'école décide donc seule de qui accède à l'application.
+
 ## 1. Rôles et permissions
 
 | Code rôle | Profil |
@@ -142,6 +146,7 @@ Menu de l'espace personnel (entrées filtrées par permission) :
   minimum, différent du temporaire).
 - Redirection : `ETUDIANT` vers `etudiant_dashboard`, tout rôle du personnel vers
   `admin_dashboard`, rôle inconnu vers la connexion avec un message.
+- L'identifiant saisi est conservé après un échec, pour ne pas le retaper.
 - « Mot de passe oublié » : page expliquant la procédure assistée (demande à l'administration,
   qui réinitialise le mot de passe depuis la fiche du compte). Voir la section Évolutions.
 - La page de connexion reprend l'identité visuelle de l'application (bandeau noir et orange,
@@ -347,7 +352,8 @@ Marie TCHOUA (enseignante), Idriss MAHAMAT (responsable du club environnement), 
   dans `config/`) permettra : réinitialisation par lien à usage unique, envoi du mot de passe
   temporaire à la création d'un compte, notifications (convocation à une audition, décision
   rendue, justificatif validé ou rejeté, clôture du semestre). Les points d'accroche sont déjà en
-  place : chaque événement à notifier est aussi une entrée du journal.
+  place : chaque événement à notifier est aussi une entrée du journal. La marche à suivre est
+  décrite dans `documentation/courriel-resend.md`.
 - Notifications par SMS, sur la même base, si l'école le souhaite.
 - Génération de PDF côté serveur pour les relevés et rapports, si l'impression depuis le
   navigateur ne suffit plus.

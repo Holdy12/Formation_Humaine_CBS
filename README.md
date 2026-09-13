@@ -38,6 +38,8 @@ tests/             recette automatisée (bash + curl)
 
 - `documentation/base-de-donnees.md` : installation de la base, historique du schéma, points à corriger
 - `documentation/espace-etudiant.md` : conception de l'espace étudiant et délégué, règles métier, cas de test
+- `documentation/espace-personnel.md` : conception de l'espace personnel (rôles, permissions, modules)
+- `documentation/courriel-resend.md` : brancher l'envoi de courriels avec Resend
 - `documentation/tests.md` : lancer la recette `tests/recette.sh`
 
 ## Tests

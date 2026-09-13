@@ -7,6 +7,16 @@ class Routeur {
     // action => [contrôleur (app/Controllers/Admin), méthode, permission requise ou null]
     private const ROUTES = [
         'admin_dashboard' => ['TableauDeBordController', 'index', 'tableau.voir'],
+        'admin_etudiants'                => ['EtudiantController', 'liste', 'etudiants.consulter'],
+        'admin_etudiants_export'         => ['EtudiantController', 'exporter', 'etudiants.consulter'],
+        'admin_etudiant'                 => ['EtudiantController', 'fiche', 'etudiants.consulter'],
+        'admin_etudiant_nouveau'         => ['EtudiantController', 'nouveau', 'etudiants.gerer'],
+        'admin_etudiant_modifier'        => ['EtudiantController', 'modifier', 'etudiants.gerer'],
+        'admin_etudiant_statut'          => ['EtudiantController', 'statut', 'etudiants.gerer'],
+        'admin_etudiant_reinitialiser'   => ['EtudiantController', 'reinitialiser', 'etudiants.gerer'],
+        'admin_etudiant_supprimer'       => ['EtudiantController', 'supprimer', 'etudiants.gerer'],
+        'admin_etudiants_import'         => ['EtudiantController', 'importer', 'etudiants.gerer'],
+        'admin_etudiants_import_resultat'=> ['EtudiantController', 'importResultat', 'etudiants.gerer'],
     ];
 
     // Anciennes actions conservées pour ne casser aucun lien.

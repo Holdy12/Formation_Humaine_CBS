@@ -10,6 +10,7 @@
                 var visible = champ.type === 'text';
                 champ.type = visible ? 'password' : 'text';
                 bouton.setAttribute('aria-pressed', visible ? 'false' : 'true');
+                bouton.setAttribute('aria-label', visible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
                 bouton.querySelector('.icone-oeil').hidden = !visible;
                 bouton.querySelector('.icone-oeil-barre').hidden = visible;
             });

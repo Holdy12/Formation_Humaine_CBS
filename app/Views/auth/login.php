@@ -12,14 +12,14 @@
                         <label for="identifiant">Identifiant</label>
                         <div class="champ-icone">
                             <?= Icone::svg('personne', 18) ?>
-                            <input type="text" name="identifiant" id="identifiant" required autocomplete="username" autofocus placeholder="Matricule ou adresse email" value="<?= htmlspecialchars($_POST['identifiant'] ?? '') ?>">
+                            <input type="text" name="identifiant" id="identifiant" required autocomplete="username"<?= $identifiant === '' ? ' autofocus' : '' ?> placeholder="Matricule ou adresse email" value="<?= htmlspecialchars($identifiant) ?>">
                         </div>
                     </div>
                     <div class="champ">
                         <label for="password">Mot de passe</label>
                         <div class="champ-icone">
                             <?= Icone::svg('cadenas', 18) ?>
-                            <input type="password" name="password" id="password" required autocomplete="current-password" placeholder="Votre mot de passe">
+                            <input type="password" name="password" id="password" required autocomplete="current-password" placeholder="Votre mot de passe"<?= $identifiant !== '' ? ' autofocus' : '' ?>>
                             <button type="button" class="voir-mdp" data-voir-mdp="password" aria-label="Afficher le mot de passe" aria-pressed="false">
                                 <span class="icone-oeil"><?= Icone::svg('oeil', 18) ?></span><span class="icone-oeil-barre" hidden><?= Icone::svg('oeil-barre', 18) ?></span>
                             </button>

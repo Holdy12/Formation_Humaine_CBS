@@ -55,7 +55,11 @@ class Personne {
     // Crée le compte et l'inscription ; retourne id, matricule et mot de passe temporaire.
     public static function creerEtudiant(array $d): array {
         $db = Database::getConnection();
-        $db->beginTransaction();
+        // Une transaction est déjà ouverte lors d'un import : ne pas en imbriquer une seconde.
+        $transaction = !$db->inTransaction();
+        if ($transaction) {
+            $db->beginTransaction();
+        }
         try {
             $matricule = self::genererMatricule('CBS');
             $motDePasse = self::genererMotDePasseTemporaire();
@@ -71,10 +75,14 @@ class Personne {
             $id = (int)$db->lastInsertId();
             $stmt = $db->prepare("INSERT INTO ETUDIANT (ID_PERSONNE, ID_PROMO, ID_CLUB, EST_DELEGUE) VALUES (:id, :promo, :club, :delegue)");
             $stmt->execute(['id' => $id, 'promo' => $d['id_promo'], 'club' => $d['id_club'] ?: null, 'delegue' => !empty($d['delegue']) ? 1 : 0]);
-            $db->commit();
+            if ($transaction) {
+                $db->commit();
+            }
             return ['id' => $id, 'matricule' => $matricule, 'motDePasse' => $motDePasse];
         } catch (Exception $e) {
-            $db->rollBack();
+            if ($transaction && $db->inTransaction()) {
+                $db->rollBack();
+            }
             throw $e;
         }
     }
