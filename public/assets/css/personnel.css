@@ -89,3 +89,22 @@ code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-siz
 /* Fiche : le bloc d'identité s'adapte à la largeur de sa colonne */
 .details-identite { text-align: left; margin-top: 4px; }
 .carte-identite .details-identite { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+
+/* Chronologie du dossier */
+.chronologie { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.chronologie li { display: grid; grid-template-columns: 14px 1fr; gap: 12px; position: relative; }
+.chronologie li:not(:last-child)::before { content: ''; position: absolute; left: 6px; top: 16px; bottom: -16px; width: 2px; background: var(--border-color); }
+.chronologie-point { width: 12px; height: 12px; border-radius: 50%; background: var(--bg-surface); border: 2px solid var(--primary); margin-top: 4px; position: relative; z-index: 1; }
+.chronologie-detail { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.chronologie-commentaire { font-size: 13px; margin-top: 4px; }
+
+/* Décision et pièces */
+.choix-decision { display: grid; gap: 8px; }
+.choix-decision .case { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); transition: border-color 0.15s ease, background-color 0.15s ease; }
+.choix-decision .case:hover { border-color: var(--primary); }
+.choix-decision .case:has(input:checked) { border-color: var(--primary); background: rgba(255, 127, 0, 0.08); }
+.liste-pieces { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.liste-pieces li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); font-size: 13px; }
+.liste-pieces small { color: var(--text-muted); }
+.temoin-ligne { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 900px) { .temoin-ligne { grid-template-columns: 1fr; } }

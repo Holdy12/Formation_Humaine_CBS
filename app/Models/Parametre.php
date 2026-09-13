@@ -15,6 +15,10 @@ class Parametre {
         return self::$cache[$code] ?? $defaut;
     }
 
+    public static function viderCache(): void {
+        self::$cache = [];
+    }
+
     public static function nombre(string $code, float $defaut): float {
         return (float)self::valeur($code, (string)$defaut);
     }

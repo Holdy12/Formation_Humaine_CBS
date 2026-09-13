@@ -17,6 +17,14 @@ class Routeur {
         'admin_etudiant_supprimer'       => ['EtudiantController', 'supprimer', 'etudiants.gerer'],
         'admin_etudiants_import'         => ['EtudiantController', 'importer', 'etudiants.gerer'],
         'admin_etudiants_import_resultat'=> ['EtudiantController', 'importResultat', 'etudiants.gerer'],
+        'admin_signalements'             => ['SignalementController', 'liste', 'signalements.creer'],
+        'admin_signalement'              => ['SignalementController', 'dossier', 'signalements.creer'],
+        'admin_signalement_nouveau'      => ['SignalementController', 'nouveau', 'signalements.creer'],
+        'admin_signalement_ouvrir'       => ['SignalementController', 'ouvrir', 'signalements.instruire'],
+        'admin_signalement_audition'     => ['SignalementController', 'audition', 'signalements.instruire'],
+        'admin_signalement_decider'      => ['SignalementController', 'decider', 'signalements.instruire'],
+        'admin_signalement_cloturer'     => ['SignalementController', 'cloturer', 'signalements.instruire'],
+        'admin_piece'                    => ['SignalementController', 'piece', 'signalements.creer'],
     ];
 
     // Anciennes actions conservées pour ne casser aucun lien.
