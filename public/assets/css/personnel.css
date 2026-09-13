@@ -108,3 +108,5 @@ code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-siz
 .liste-pieces small { color: var(--text-muted); }
 .temoin-ligne { grid-template-columns: 1fr 1fr 1fr; }
 @media (max-width: 900px) { .temoin-ligne { grid-template-columns: 1fr; } }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

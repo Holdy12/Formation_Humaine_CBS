@@ -25,6 +25,14 @@ class Routeur {
         'admin_signalement_decider'      => ['SignalementController', 'decider', 'signalements.instruire'],
         'admin_signalement_cloturer'     => ['SignalementController', 'cloturer', 'signalements.instruire'],
         'admin_piece'                    => ['SignalementController', 'piece', 'signalements.creer'],
+        'admin_appel'                    => ['PresenceController', 'appel', 'appel.faire'],
+        'admin_seances'                  => ['PresenceController', 'seances', 'appel.faire'],
+        'admin_seance_planifier'         => ['PresenceController', 'planifier', 'appel.faire'],
+        'admin_justificatifs'            => ['PresenceController', 'justificatifs', 'justificatifs.valider'],
+        'admin_justificatif_fichier'     => ['PresenceController', 'fichier', 'justificatifs.valider'],
+        'admin_justificatif_decider'     => ['PresenceController', 'deciderJustificatif', 'justificatifs.valider'],
+        'admin_assiduite'                => ['PresenceController', 'assiduite', 'assiduite.penaliser'],
+        'admin_assiduite_penaliser'      => ['PresenceController', 'penaliser', 'assiduite.penaliser'],
     ];
 
     // Anciennes actions conservées pour ne casser aucun lien.
