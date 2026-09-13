@@ -1,0 +1,50 @@
+/* Espace personnel — compléments à espace.css */
+
+/* Pagination */
+.pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
+.pagination-liens { display: flex; align-items: center; gap: 10px; }
+
+/* Pages d'authentification */
+body.page-auth { display: block; overflow: auto; }
+.auth { display: grid; grid-template-columns: minmax(320px, 5fr) minmax(0, 7fr); min-height: 100vh; }
+.auth-marque { background: #1a1a1a; color: #fff; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; border-right: 4px solid var(--primary); }
+.auth-logo { background: #fff; border-radius: 10px; padding: 14px; width: fit-content; }
+.auth-logo img { display: block; height: 72px; width: auto; }
+.auth-nom { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 14px; }
+.auth-marque h1 { font-size: 30px; font-weight: 700; line-height: 1.2; letter-spacing: -0.6px; max-width: 18ch; margin-bottom: 16px; }
+.auth-description { font-size: 14px; line-height: 1.6; color: #b8b8b8; max-width: 44ch; margin-bottom: 28px; }
+.auth-domaines { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; max-width: 360px; }
+.auth-domaines li { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #e5e5e5; }
+.auth-domaines .icone { color: var(--primary); }
+.auth-domaines small { display: block; font-size: 12px; color: #8f8f8f; }
+.auth-pied { font-size: 12px; color: #777; }
+.auth-contenu { display: flex; align-items: center; justify-content: center; padding: 40px 24px; background: var(--bg-body); }
+.auth-carte { width: 100%; max-width: 420px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 36px 32px; box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08); }
+.auth-carte h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 6px; }
+.auth-sous-titre { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 22px; }
+.auth-formulaire { gap: 18px; max-width: none; }
+.champ-icone { position: relative; display: flex; align-items: center; }
+.champ-icone > .icone { position: absolute; left: 12px; color: var(--text-muted); pointer-events: none; }
+.champ-icone input { padding-left: 40px; }
+.champ-icone input + .voir-mdp { position: absolute; right: 6px; }
+.champ-icone:has(.voir-mdp) input { padding-right: 44px; }
+.voir-mdp { border: 0; background: none; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: 6px; display: inline-flex; }
+.voir-mdp span { display: inline-flex; }
+.voir-mdp span[hidden] { display: none; }
+.voir-mdp:hover { color: var(--text-main); background: var(--bg-body); }
+.btn-large { width: 100%; justify-content: center; padding: 13px 18px; font-size: 14px; }
+.auth-lien { display: block; text-align: center; font-size: 13px; color: var(--text-muted); text-decoration: none; }
+.auth-lien:hover { color: var(--primary); }
+.auth-etapes { padding-left: 20px; display: grid; gap: 12px; font-size: 14px; line-height: 1.55; margin-bottom: 24px; color: var(--text-main); }
+.auth-etapes strong { font-weight: 600; }
+@media (max-width: 900px) {
+  .auth { grid-template-columns: 1fr; min-height: auto; }
+  .auth-marque { flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; padding: 14px 16px; border-right: 0; border-bottom: 4px solid var(--primary); }
+  .auth-logo { padding: 6px; border-radius: 8px; }
+  .auth-logo img { height: 40px; }
+  .auth-marque h1, .auth-description, .auth-domaines, .auth-pied { display: none; }
+  .auth-nom { margin: 0; font-size: 15px; color: #fff; }
+  .auth-nom::after { content: " · CBS"; color: #8f8f8f; font-weight: 500; }
+  .auth-contenu { padding: 24px 16px; align-items: flex-start; }
+  .auth-carte { padding: 28px 20px; }
+}
