@@ -17,6 +17,15 @@ passer à la suivante.
 Sous Windows, XAMPP fournit PHP et MariaDB. Les chemins utilisés ci-dessous sont ceux d'une
 installation standard dans `C:\xampp`. Sous Linux, remplacer par `php` et `mysql`.
 
+Sous Debian ou Ubuntu, installer les paquets génériques : les noms versionnés (`php8.1`,
+`php8.2`) n'existent pas dans les dépôts récents, qui ne fournissent que la version de PHP
+de la distribution.
+
+```bash
+sudo apt install php php-cli php-mysql php-mbstring mariadb-server
+sudo systemctl enable --now mariadb
+```
+
 Vérifier PHP et ses extensions :
 
 ```bash
@@ -91,7 +100,7 @@ mysql -u root -p --default-character-set=utf8mb4 < database/seed.sql
 mysql -u root -p --default-character-set=utf8mb4 < database/donnees_test.sql
 ```
 
-- `schema.sql` supprime et recrée la base `formation_humaine_db` (26 tables). Ne jamais le
+- `schema.sql` supprime et recrée la base `formation_humaine_db` (27 tables). Ne jamais le
   rejouer sur une base qui contient des données réelles.
 - `seed.sql` charge les rôles, les domaines, le barème, les paramètres et le compte administrateur.
 - `donnees_test.sql` est facultatif : trois étudiants, quatre membres du personnel, des séances,
@@ -104,7 +113,7 @@ mysql -u root -p --default-character-set=utf8mb4 < database/donnees_test.sql
 C:\xampp\mysql\bin\mysql.exe -u root formation_humaine_db -e "SELECT COUNT(*) AS tables_creees FROM information_schema.tables WHERE table_schema='formation_humaine_db'; SELECT COUNT(*) AS parametres FROM PARAMETRE_SYSTEME; SELECT NOM_DOMAINE FROM DOMAINE;"
 ```
 
-Attendu : 26 tables, 15 paramètres, et les quatre domaines avec leurs accents intacts
+Attendu : 27 tables, 15 paramètres, et les quatre domaines avec leurs accents intacts
 (« Comportement écologique », « Action citoyenne »). Des caractères comme `Ã©` à la place de
 `é` signalent un import sans `utf8mb4` : recommencer l'étape 3.3.
 
@@ -126,6 +135,7 @@ puis renseigner les valeurs :
 | `DB_USER`, `DB_PASS` | compte MySQL créé à l'étape 3.2 | vide (obligatoire) |
 | `BASE_URL` | adresse à laquelle l'application est servie, sans barre finale | `http://localhost:8000` |
 | `APP_TIMEZONE` | fuseau horaire de PHP et de la connexion MySQL | `Africa/Ndjamena` |
+| `APP_DEBUG` | affichage des erreurs PHP : `true` en développement, `false` ailleurs | `false` |
 
 `BASE_URL` doit correspondre exactement à la façon dont l'application est servie (étape 5) :
 elle sert aux redirections après connexion et après chaque formulaire. Les chemins vers les
@@ -234,9 +244,10 @@ en une fois), puis redémarrer Apache.
 2. **`.env`** : créer le fichier sur le serveur (ou fournir les variables par l'hébergeur) avec
    un compte MySQL dédié et `BASE_URL` à l'adresse publique, avec `https://` si un certificat
    est en place. Ne jamais copier le `.env` d'un poste de développement.
-3. **Erreurs PHP** : dans `public/index.php`, passer `display_errors` et
-   `display_startup_errors` à `0` ; garder `log_errors` actif dans `php.ini` pour retrouver les
-   erreurs dans le journal du serveur.
+3. **Erreurs PHP** : laisser `APP_DEBUG=false` dans le `.env` du serveur (valeur par défaut).
+   Les erreurs restent écrites dans le journal du serveur (`log_errors`), mais ne sont jamais
+   envoyées au navigateur : affichées, elles exposeraient les chemins du serveur et
+   corrompraient les exports CSV et les fichiers téléchargés.
 4. **Base** : charger `schema.sql` et `seed.sql` seulement ; ne pas charger
    `donnees_test.sql`. Changer le mot de passe de l'administrateur dès la première connexion.
 5. **Sauvegardes** : `mysqldump -u root -p formation_humaine_db > sauvegarde.sql` régulièrement,
@@ -278,8 +289,8 @@ Sur un poste de développement seulement (le script recharge la base et efface `
 bash tests/recette.sh
 ```
 
-Attendu : `--- résultat : 59 ok, 0 ko ---`. Le script rejoue les 23 cas de l'espace étudiant
-puis les 23 cas de l'espace personnel contre l'application en cours d'exécution
+Attendu : `--- résultat : 61 ok, 0 ko ---`. Le script rejoue les cas de l'espace étudiant
+puis ceux de l'espace personnel contre l'application en cours d'exécution
 (`documentation/tests.md`).
 
 ## 11. Pour aller plus loin

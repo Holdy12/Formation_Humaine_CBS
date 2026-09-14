@@ -51,12 +51,18 @@
         <h3>Par domaine</h3>
         <div class="domaines">
             <?php foreach ($solde['domaines'] as $d): ?>
-                <?php $total = max($d['POSITIF'] + $d['NEGATIF'], 0.01); ?>
+                <?php
+                // Une seule échelle par domaine : son plafond quand il existe, pour que la barre
+                // corresponde au « sur X » affiché à côté ; sinon le capital de départ.
+                $reference = $d['PLAFOND'] > 0 ? $d['PLAFOND'] : max($solde['capital'], 0.01);
+                $largeurPlus = min(100, (int)round($d['BONUS_RETENU'] / $reference * 100));
+                $largeurMoins = min(100 - $largeurPlus, (int)round($d['NEGATIF'] / $reference * 100));
+                ?>
                 <div class="domaine">
                     <span class="nom"><?= htmlspecialchars($d['NOM_DOMAINE']) ?></span>
                     <div class="barre">
-                        <div class="plus" style="width: <?= round($d['POSITIF'] / $total * 100) ?>%"></div>
-                        <div class="moins" style="width: <?= round($d['NEGATIF'] / $total * 100) ?>%"></div>
+                        <div class="plus" style="width: <?= $largeurPlus ?>%"></div>
+                        <div class="moins" style="width: <?= $largeurMoins ?>%"></div>
                     </div>
                     <span class="chiffres">
                         <?php if ($d['POSITIF'] == 0 && $d['NEGATIF'] == 0): ?>

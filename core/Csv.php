@@ -7,9 +7,9 @@ class Csv {
         header('Content-Disposition: attachment; filename="' . $nom . '-' . date('Y-m-d') . '.csv"');
         $sortie = fopen('php://output', 'w');
         fwrite($sortie, "\xEF\xBB\xBF");
-        fputcsv($sortie, $entetes, ';');
+        fputcsv($sortie, $entetes, ';', '"', '');
         foreach ($lignes as $ligne) {
-            fputcsv($sortie, $ligne, ';');
+            fputcsv($sortie, $ligne, ';', '"', '');
         }
         fclose($sortie);
         exit();

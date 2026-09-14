@@ -151,7 +151,7 @@ class Etudiant {
             throw new RuntimeException("Le fichier ne contient aucune ligne de données.");
         }
         $separateur = substr_count($lignes[0], ';') >= substr_count($lignes[0], ',') ? ';' : ',';
-        $entetes = array_map(fn($h) => strtolower(trim($h)), str_getcsv($lignes[0], $separateur));
+        $entetes = array_map(fn($h) => strtolower(trim($h)), str_getcsv($lignes[0], $separateur, '"', ''));
         $attendues = ['nom', 'prenom', 'email', 'telephone', 'sexe', 'date_naissance', 'adresse', 'code_promo'];
         $manquantes = array_diff($attendues, $entetes);
         if ($manquantes) {
@@ -164,7 +164,7 @@ class Etudiant {
             if (trim($brut) === '') {
                 continue;
             }
-            $valeurs = str_getcsv($brut, $separateur);
+            $valeurs = str_getcsv($brut, $separateur, '"', '');
             $ligne = [];
             foreach ($entetes as $k => $nom) {
                 $ligne[$nom] = trim($valeurs[$k] ?? '');

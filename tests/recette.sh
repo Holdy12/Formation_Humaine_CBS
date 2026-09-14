@@ -21,6 +21,9 @@ fi
 if [ -z "${MYSQL:-}" ]; then
     if [ -x /c/xampp/mysql/bin/mysql.exe ]; then MYSQL=/c/xampp/mysql/bin/mysql.exe; else MYSQL=mysql; fi
 fi
+# L'application valide les dates dans le fuseau APP_TIMEZONE. Prendre la date du shell ferait
+# échouer les cas « séance du jour » pendant les heures où les deux fuseaux ne sont pas le même jour.
+AUJOURDHUI=$("$PHP" -r 'require "core/Env.php"; date_default_timezone_set(Env::lire("APP_TIMEZONE", "Africa/Ndjamena")); echo date("Y-m-d");')
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
@@ -139,7 +142,7 @@ verif "P12 un responsable de club ne fait pas l'appel d'une promotion" "$(curl -
 IDS=$(sql "SELECT ID_SEANCE FROM SEANCE WHERE TITRE_SEANCE='Sortie reboisement'")
 verif "P12b appel d'une séance à venir refusé" "$(curl -s -b "$TMP/idriss.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "seance=$IDS" --data-urlencode "club=1" --data-urlencode "statut[6]=PRESENT" "$URL?action=admin_appel" | grep -c 'pas encore eu lieu')" "1"
 JET=$(page enock admin_appel | jeton)
-curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "promo=1" --data-urlencode "club=0" --data-urlencode "seance=0" --data-urlencode "titre=Cours du jour" --data-urlencode "date=$(date +%Y-%m-%d)" --data-urlencode "debut=08:00" --data-urlencode "fin=10:00" --data-urlencode "lieu=A1" --data-urlencode "statut[5]=PRESENT" "$URL?action=admin_appel"
+curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "promo=1" --data-urlencode "club=0" --data-urlencode "seance=0" --data-urlencode "titre=Cours du jour" --data-urlencode "date=$AUJOURDHUI" --data-urlencode "debut=08:00" --data-urlencode "fin=10:00" --data-urlencode "lieu=A1" --data-urlencode "statut[5]=PRESENT" "$URL?action=admin_appel"
 IDS=$(sql "SELECT ID_SEANCE FROM SEANCE WHERE TITRE_SEANCE='Cours du jour'")
 verif "P12c séance datée du jour acceptée, second appel sur la même séance refusé" "$(sql "SELECT COUNT(*) FROM APPEL WHERE ID_SEANCE=${IDS:-0}") $(curl -s -b "$TMP/enock.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "promo=1" --data-urlencode "club=0" --data-urlencode "seance=${IDS:-0}" --data-urlencode "statut[5]=ABSENT" "$URL?action=admin_appel" | grep -c 'a déjà été enregistré') $(sql "SELECT COUNT(*) FROM APPEL WHERE ID_SEANCE=${IDS:-0}")" "1 1 1"
 A=$(page enock admin_assiduite); JET=$(echo "$A" | jeton); IDS_P=$(echo "$A" | grep -o 'name="presences\[\]" value="[0-9]*"' | grep -o '[0-9]*' | paste -sd,)

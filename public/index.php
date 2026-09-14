@@ -1,7 +1,13 @@
 <?php
 // public/index.php — point d'entrée unique
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+require_once __DIR__ . '/../core/Env.php';
+
+// Les erreurs ne s'affichent qu'en développement : en production elles corrompraient
+// les téléchargements (CSV, fichiers) et exposeraient les chemins du serveur.
+$debug = filter_var(Env::lire('APP_DEBUG', 'false'), FILTER_VALIDATE_BOOL);
+ini_set('display_errors', $debug ? '1' : '0');
+ini_set('display_startup_errors', $debug ? '1' : '0');
+ini_set('log_errors', '1');
 error_reporting(E_ALL);
 
 if (session_status() === PHP_SESSION_NONE) {
