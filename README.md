@@ -25,7 +25,7 @@ En résumé :
 1. Cloner le dépôt.
 2. Créer la base et charger les scripts dans l'ordre (détails dans `documentation/base-de-donnees.md`) :
    `database/schema.sql`, `database/seed.sql`, puis `database/donnees_test.sql` (facultatif, jeu d'essai).
-3. Renseigner les accès MySQL (`DB_USER`, `DB_PASS`) et `BASE_URL` dans `config/database.php`.
+3. Copier `.env.example` en `.env` et y renseigner les accès MySQL (`DB_USER`, `DB_PASS`) et `BASE_URL`.
 4. Lancer `php -S localhost:8000 -t public` et ouvrir `http://localhost:8000`.
 
 Compte administrateur initial : `admin@formation.local` / `Admin123!` (à changer après la première connexion).
@@ -37,7 +37,7 @@ app/Controllers/   traitement des requêtes ; Admin/ pour l'espace personnel
 app/Models/        accès aux données (PDO, requêtes préparées)
 app/Views/         pages HTML : etudiant/, admin/, auth/ ; partials/ pour le gabarit commun ; erreur.php
 core/              session, permissions et routage, journal, fichiers envoyés, icônes, composants
-config/            connexion à la base
+config/            connexion à la base (accès lus dans `.env`)
 database/          schéma, données de référence, données de test
 documentation/     documentation fonctionnelle et technique
 public/            racine web : index.php, assets/

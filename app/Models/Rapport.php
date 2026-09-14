@@ -20,9 +20,10 @@ class Rapport {
             WHERE $ou ORDER BY pr.CODE_PROMO, p.NOM, p.PRENOM
         ");
         $stmt->execute($params);
+        $soldes = MouvementPoint::soldesParEtudiant($semestre['DATE_DEBUT'], $semestre['DATE_FIN']);
         $lignes = [];
         foreach ($stmt->fetchAll() as $e) {
-            $solde = MouvementPoint::solde((int)$e['ID_PERSONNE'], $semestre['DATE_DEBUT'], $semestre['DATE_FIN']);
+            $solde = $soldes[(int)$e['ID_PERSONNE']] ?? MouvementPoint::calculer([]);
             $e['PENALITES'] = $solde['penalites'];
             $e['BONUS'] = $solde['bonus'];
             $e['SOLDE'] = $solde['solde'];

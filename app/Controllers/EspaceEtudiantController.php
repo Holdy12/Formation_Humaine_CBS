@@ -208,7 +208,7 @@ class EspaceEtudiantController {
         $id = (int)$this->etudiant['ID_PERSONNE'];
         if (!empty($_POST['retirer'])) {
             Fichier::supprimerPublic($this->etudiant['PHOTO']);
-            Etudiant::modifierPhoto($id, null);
+            Personne::modifierPhoto($id, null);
             $this->retour('etudiant_profil', "Photo retirée.");
         }
         if (!Fichier::estPresent($_FILES['photo'] ?? [])) {
@@ -220,7 +220,7 @@ class EspaceEtudiantController {
             $this->retour('etudiant_profil', $e->getMessage(), false);
         }
         Fichier::supprimerPublic($this->etudiant['PHOTO']);
-        Etudiant::modifierPhoto($id, $chemin);
+        Personne::modifierPhoto($id, $chemin);
         $this->retour('etudiant_profil', "Photo de profil mise à jour.");
     }
 
@@ -248,7 +248,7 @@ class EspaceEtudiantController {
         if ($telephone === '' || mb_strlen($telephone) > 100 || mb_strlen($adresse) > 100) {
             $this->retour('etudiant_parametres', "Le téléphone est obligatoire et chaque champ est limité à 100 caractères.", false);
         }
-        Etudiant::modifierCoordonnees((int)$this->etudiant['ID_PERSONNE'], $telephone, $adresse === '' ? null : $adresse);
+        Personne::modifierCoordonnees((int)$this->etudiant['ID_PERSONNE'], $telephone, $adresse === '' ? null : $adresse);
         $this->retour('etudiant_parametres', "Coordonnées enregistrées.");
     }
 
@@ -258,7 +258,7 @@ class EspaceEtudiantController {
         $actuel = $_POST['actuel'] ?? '';
         $nouveau = $_POST['nouveau'] ?? '';
         $confirmation = $_POST['confirmation'] ?? '';
-        if (!password_verify($actuel, Etudiant::motDePasseHash($id))) {
+        if (!password_verify($actuel, Personne::motDePasseHash($id))) {
             $this->retour('etudiant_parametres', "Le mot de passe actuel est incorrect.", false);
         }
         if (strlen($nouveau) < 8) {
@@ -270,7 +270,7 @@ class EspaceEtudiantController {
         if ($nouveau === $actuel) {
             $this->retour('etudiant_parametres', "Le nouveau mot de passe doit être différent de l'actuel.", false);
         }
-        Etudiant::changerMotDePasse($id, $nouveau);
+        Personne::changerMotDePasse($id, $nouveau);
         $this->retour('etudiant_parametres', "Mot de passe changé.");
     }
 

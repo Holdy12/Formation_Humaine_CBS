@@ -17,11 +17,11 @@ Comptes :
 | Administrateur | `admin@formation.local` ou `ADM-2026-001` | `Admin123!` |
 | Tous les comptes de `donnees_test.sql` | email ou matricule | `Test1234!` |
 
-L'utilisateur MySQL attendu par `config/database.php` est `Maurer` / `20031975` :
+L'utilisateur MySQL est celui renseigné dans `.env` (`DB_USER`, `DB_PASS`) ; par exemple :
 
 ```sql
-CREATE USER 'Maurer'@'localhost' IDENTIFIED BY '20031975';
-GRANT ALL PRIVILEGES ON formation_humaine_db.* TO 'Maurer'@'localhost';
+CREATE USER 'formation'@'localhost' IDENTIFIED BY 'un-mot-de-passe-solide';
+GRANT ALL PRIVILEGES ON formation_humaine_db.* TO 'formation'@'localhost';
 ```
 
 ## Historique du schéma
@@ -70,8 +70,22 @@ avec le dictionnaire des données et le document préparatoire.
   `ID_MOUVEMENT_CORRIGE` : le mouvement annulé par une écriture inverse.
 - `PARAMETRE_SYSTEME` : `SEUIL_CRITIQUE_NOTE` et les seuils de mention `MENTION_TRES_BIEN`,
   `MENTION_BIEN`, `MENTION_ASSEZ_BIEN`, `MENTION_PASSABLE`.
-- `config/database.php` fixe le fuseau horaire de PHP (`Africa/Ndjamena`) et de la connexion
-  MySQL (`+01:00`), afin que les délais soient calculés de la même façon des deux côtés.
+- `TENTATIVE_CONNEXION` : échecs de connexion récents (identifiant saisi, adresse, date), qui
+  limitent les essais de mot de passe indépendamment de la session. Sur une base existante :
+
+  ```sql
+  CREATE TABLE TENTATIVE_CONNEXION (
+     ID_TENTATIVE INT AUTO_INCREMENT PRIMARY KEY,
+     IDENTIFIANT VARCHAR(100) NOT NULL,
+     ADRESSE_IP VARCHAR(50) NOT NULL,
+     DATE_TENTATIVE DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     INDEX IDX_TENTATIVE_IDENTIFIANT (IDENTIFIANT, DATE_TENTATIVE),
+     INDEX IDX_TENTATIVE_ADRESSE (ADRESSE_IP, DATE_TENTATIVE)
+  ) ENGINE=InnoDB;
+  ```
+- `config/database.php` lit les accès dans `.env` (voir `installation.md`) et aligne le fuseau
+  horaire de la connexion MySQL sur celui de PHP (`APP_TIMEZONE`, `Africa/Ndjamena` par défaut),
+  afin que les délais soient calculés de la même façon des deux côtés.
 
 ## Historique des corrections côté administration
 

@@ -104,6 +104,8 @@ verif "23 aucune erreur PHP sur les pages" "$(for p in dashboard points presence
 echo "--- cas de test : espace personnel ---"
 connexion enock enock.panda@cbs.local 'Test1234!' >/dev/null; connexion mar marie.tchoua@cbs.local 'Test1234!' >/dev/null
 connexion idriss idriss.mahamat@cbs.local 'Test1234!' >/dev/null; connexion sylvie sylvie.ndouba@cbs.local 'Test1234!' >/dev/null
+for i in 1 2 3 4 5; do connexion "essai$i" inconnu@cbs.local 'faux' >/dev/null; done
+verif "P0  cinq échecs, chacun avec une session neuve, bloquent l'identifiant" "$(connexion essai6 inconnu@cbs.local 'faux' | sed 's/.*erreur=//') $(sql "SELECT COUNT(*) FROM TENTATIVE_CONNEXION WHERE IDENTIFIANT='inconnu@cbs.local'")" "blocage 5"
 R=$(connexion enock2 enock.panda@cbs.local 'Test1234!'); verif "P1  connexion du personnel vers son tableau de bord" "${R##*action=}" "admin_dashboard"
 verif "P2  droits : Marie refusée sur les justificatifs, admise sur l'appel" "$(curl -s -b "$TMP/mar.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_justificatifs") $(curl -s -b "$TMP/mar.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_appel")" "403 200"
 verif "P3  Marie ne voit que ses propres signalements" "$(page mar admin_signalements | grep -c 'Perturbation en cours') $(page mar admin_signalements | grep -c 'Participation au nettoyage')" "1 0"

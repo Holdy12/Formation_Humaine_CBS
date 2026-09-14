@@ -67,6 +67,7 @@ core/Routeur.php                          table des routes admin_* → contrôle
 core/Permissions.php                      matrice rôle → permissions
 core/Auth.php                             + exigerPersonnel(), exigerPermission(), peut(), connecter()
 core/Journal.php                          écriture du journal d'audit
+core/Env.php                              lecture de .env (accès à la base, adresse, fuseau)
 app/Controllers/AuthController.php        connexion, déconnexion, première connexion, mot de passe oublié
 app/Controllers/PersonnelController.php   base commune : gabarit, menu, messages, pagination
 app/Controllers/Admin/TableauDeBordController.php
@@ -81,6 +82,7 @@ app/Controllers/Admin/CompteController.php
 app/Controllers/Admin/RapportController.php
 app/Controllers/Admin/JournalController.php
 app/Models/Personne.php                   comptes (personnel et étudiants), mots de passe, statut
+app/Models/TentativeConnexion.php         échecs de connexion récents, limitation des essais
 app/Models/Structure.php                  années, semestres, filières, niveaux, promotions, clôture
 app/Models/Club.php                       clubs, membres, séances
 app/Models/Bareme.php                     domaines, critères, paramètres
@@ -139,9 +141,10 @@ Menu de l'espace personnel (entrées filtrées par permission) :
 - Un compte dont `STATUT_COMPTE` n'est pas `ACTIF` ne peut pas se connecter (message dédié).
 - À la connexion : régénération de l'identifiant de session, variables `user_id`, `user_role`,
   `nom`, `prenom`, écriture d'une ligne `JOURNAL_CONNEXION` (`SUCCES` ou `ECHEC`).
-- Après cinq échecs consécutifs dans la même session, un délai de trente secondes est imposé
-  (limitation connue : le compteur est lié à la session ; un blocage par adresse IP pourra
-  compléter ce mécanisme).
+- Chaque échec est enregistré dans `TENTATIVE_CONNEXION` (identifiant saisi, adresse, date).
+  Au-delà de cinq échecs pour un même identifiant, ou de cinquante pour une même adresse, sur
+  les dix dernières minutes, la connexion est refusée (message dédié) ; une connexion réussie
+  efface les échecs de l'identifiant. Le compteur ne dépend ni de la session ni du cookie.
 - Le formulaire de connexion porte lui aussi un jeton CSRF.
 - Si `PERSONNE.DOIT_CHANGER_MDP = 1`, l'utilisateur est conduit à la page de première connexion
   et ne peut rien faire d'autre avant d'avoir choisi un nouveau mot de passe (huit caractères
@@ -172,10 +175,11 @@ activité récente du journal, clubs animés avec accès direct à l'appel.
 
 - Liste : recherche (nom, prénom, matricule, email), filtres promotion, niveau, filière, statut de
   compte ; tri ; pagination par 25 ; export CSV de la sélection.
-- Fiche : identité et photo, cursus, solde du semestre (sélecteur), registre des points,
-  présences, signalements, justificatifs ; actions selon permission : modifier, nouveau
-  signalement pré-rempli, réinitialiser le mot de passe, désactiver ou réactiver, supprimer
-  (uniquement sans historique).
+- Fiche : identité et photo, cursus, présences et justificatifs ; avec `points.consulter`,
+  solde du semestre (sélecteur) et registre des points ; signalements avec la même portée que
+  la liste (tous avec `signalements.consulter_tous`, sinon ceux que l'on a transmis) ; actions
+  selon permission : modifier, nouveau signalement pré-rempli, réinitialiser le mot de passe,
+  désactiver ou réactiver, supprimer (uniquement sans historique).
 - Ajout et modification : identité, coordonnées, promotion, club, délégué, photo. Le matricule
   est généré (`CBS<année>-<numéro>`, numéro suivant de l'année) ; un mot de passe temporaire est
   généré, affiché une seule fois et impose un changement à la première connexion.

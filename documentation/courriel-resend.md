@@ -27,19 +27,27 @@ et depuis `onboarding@resend.dev`. C'est suffisant pour développer.
 
 ## 2. Configuration dans le projet
 
-Ajouter les constantes dans `config/database.php`, à côté de `BASE_URL` :
+Ajouter les variables dans `.env` (et leurs noms, sans valeur, dans `.env.example`) :
 
-```php
-// Envoi de courriels (Resend). Laisser COURRIEL_ACTIF à false pour désactiver tout envoi.
-define('COURRIEL_ACTIF', true);
-define('RESEND_CLE_API', 're_xxxxxxxxxxxxxxxxxxxxxxxx');
-define('COURRIEL_EXPEDITEUR', 'Formation Humaine CBS <formation-humaine@cbs.td>');
-define('COURRIEL_REPONSE', 'formation-humaine@cbs.td');
+```
+# Envoi de courriels (Resend). COURRIEL_ACTIF=0 désactive tout envoi.
+COURRIEL_ACTIF=1
+RESEND_CLE_API=re_xxxxxxxxxxxxxxxxxxxxxxxx
+COURRIEL_EXPEDITEUR="Formation Humaine CBS <formation-humaine@cbs.td>"
+COURRIEL_REPONSE=formation-humaine@cbs.td
 ```
 
-`config/database.php` est ignoré par Git (voir `.gitignore`) : la clé n'est jamais versionnée.
-Chaque poste et le serveur ont leur propre fichier. Ne jamais écrire la clé dans un fichier suivi
-par Git, ni dans une vue.
+puis les constantes dans `config/database.php`, à côté de `BASE_URL` :
+
+```php
+define('COURRIEL_ACTIF', Env::lire('COURRIEL_ACTIF', '0') === '1');
+define('RESEND_CLE_API', Env::lire('RESEND_CLE_API'));
+define('COURRIEL_EXPEDITEUR', Env::lire('COURRIEL_EXPEDITEUR'));
+define('COURRIEL_REPONSE', Env::lire('COURRIEL_REPONSE'));
+```
+
+`.env` est ignoré par Git : la clé n'est jamais versionnée. Chaque poste et le serveur ont leur
+propre fichier. Ne jamais écrire la clé dans un fichier suivi par Git, ni dans une vue.
 
 Vérifier aussi que l'extension `curl` est active dans `php.ini` (`extension=curl`).
 

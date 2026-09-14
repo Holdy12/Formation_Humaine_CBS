@@ -51,6 +51,7 @@ $gere = Auth::peut('etudiants.gerer');
     </div>
 
     <div class="colonne-profil">
+        <?php if ($voitPoints): ?>
         <div class="dashboard-card">
             <div class="entete-carte">
                 <h3>Formation Humaine</h3>
@@ -88,6 +89,7 @@ $gere = Auth::peut('etudiants.gerer');
             </table></div>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
 
         <div class="dashboard-card">
             <h3>Présences</h3>
@@ -106,7 +108,7 @@ $gere = Auth::peut('etudiants.gerer');
         <div class="dashboard-card">
             <h3>Signalements</h3>
             <?php if (empty($dossiers)): ?>
-                <?= Composant::etatVide('drapeau', 'Aucun signalement', 'Aucun dossier ne concerne cet étudiant.') ?>
+                <?= Composant::etatVide('drapeau', 'Aucun signalement', Auth::peut('signalements.consulter_tous') ? 'Aucun dossier ne concerne cet étudiant.' : "Aucun dossier que vous avez transmis ne concerne cet étudiant.") ?>
             <?php else: ?>
             <div class="defilement"><table class="activity-table">
                 <thead><tr><th>Date des faits</th><th>Objet</th><th>Critère</th><th>Statut</th><th></th></tr></thead>

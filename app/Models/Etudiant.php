@@ -211,25 +211,4 @@ class Etudiant {
             throw $e;
         }
     }
-
-    public static function modifierCoordonnees(int $idPersonne, string $telephone, ?string $adresse): void {
-        $stmt = Database::getConnection()->prepare("UPDATE PERSONNE SET TELEPHONE = :tel, ADRESSE = :adresse WHERE ID_PERSONNE = :id");
-        $stmt->execute(['tel' => $telephone, 'adresse' => $adresse, 'id' => $idPersonne]);
-    }
-
-    public static function modifierPhoto(int $idPersonne, ?string $chemin): void {
-        $stmt = Database::getConnection()->prepare("UPDATE PERSONNE SET PHOTO = :photo WHERE ID_PERSONNE = :id");
-        $stmt->execute(['photo' => $chemin, 'id' => $idPersonne]);
-    }
-
-    public static function motDePasseHash(int $idPersonne): string {
-        $stmt = Database::getConnection()->prepare("SELECT MOT_DE_PASSE FROM PERSONNE WHERE ID_PERSONNE = :id");
-        $stmt->execute(['id' => $idPersonne]);
-        return (string)$stmt->fetchColumn();
-    }
-
-    public static function changerMotDePasse(int $idPersonne, string $nouveau): void {
-        $stmt = Database::getConnection()->prepare("UPDATE PERSONNE SET MOT_DE_PASSE = :mdp WHERE ID_PERSONNE = :id");
-        $stmt->execute(['mdp' => password_hash($nouveau, PASSWORD_DEFAULT), 'id' => $idPersonne]);
-    }
 }

@@ -113,7 +113,6 @@ class Auth {
         $_SESSION['nom'] = $personne['NOM'];
         $_SESSION['prenom'] = $personne['PRENOM'];
         $_SESSION['doit_changer_mdp'] = !empty($personne['DOIT_CHANGER_MDP']);
-        unset($_SESSION['echecs_connexion'], $_SESSION['blocage_jusqua']);
     }
 
     public static function deconnecter(): never {

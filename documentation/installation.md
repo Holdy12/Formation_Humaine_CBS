@@ -54,15 +54,15 @@ autres branches n'ont pas ces modules.
 
 ### 3.2 Créer l'utilisateur attendu par l'application
 
-`config/database.php` se connecte avec l'utilisateur `Maurer` et le mot de passe `20031975`.
-Créer ce compte (ou adapter le fichier de configuration, étape 4) :
+L'application se connecte avec le compte MySQL renseigné dans `.env` (étape 4). Créer ce
+compte, en remplaçant `formation` et `un-mot-de-passe-solide` par les valeurs choisies :
 
 ```bash
 # Windows
-C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE USER IF NOT EXISTS 'Maurer'@'localhost' IDENTIFIED BY '20031975'; GRANT ALL PRIVILEGES ON formation_humaine_db.* TO 'Maurer'@'localhost'; FLUSH PRIVILEGES;"
+C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE USER IF NOT EXISTS 'formation'@'localhost' IDENTIFIED BY 'un-mot-de-passe-solide'; GRANT ALL PRIVILEGES ON formation_humaine_db.* TO 'formation'@'localhost'; FLUSH PRIVILEGES;"
 
 # Linux
-sudo mysql -e "CREATE USER IF NOT EXISTS 'Maurer'@'localhost' IDENTIFIED BY '20031975'; GRANT ALL PRIVILEGES ON formation_humaine_db.* TO 'Maurer'@'localhost'; FLUSH PRIVILEGES;"
+sudo mysql -e "CREATE USER IF NOT EXISTS 'formation'@'localhost' IDENTIFIED BY 'un-mot-de-passe-solide'; GRANT ALL PRIVILEGES ON formation_humaine_db.* TO 'formation'@'localhost'; FLUSH PRIVILEGES;"
 ```
 
 Sous XAMPP, `root` n'a pas de mot de passe par défaut. Ailleurs, ajouter `-p` et saisir le
@@ -110,29 +110,37 @@ Attendu : 26 tables, 15 paramètres, et les quatre domaines avec leurs accents i
 
 ## 4. Configuration
 
-Un seul fichier compte : `config/database.php`. Il définit :
+Les accès et l'adresse de l'application sont lus dans un fichier `.env` à la racine du projet,
+jamais versionné. Le créer à partir du modèle fourni :
 
-| Constante | Rôle | Valeur par défaut |
+```bash
+cp .env.example .env      # Windows : copy .env.example .env
+```
+
+puis renseigner les valeurs :
+
+| Variable | Rôle | Valeur par défaut |
 |---|---|---|
 | `DB_HOST` | serveur MySQL | `localhost` |
 | `DB_NAME` | base | `formation_humaine_db` |
-| `DB_USER`, `DB_PASS` | compte MySQL | `Maurer` / `20031975` |
+| `DB_USER`, `DB_PASS` | compte MySQL créé à l'étape 3.2 | vide (obligatoire) |
 | `BASE_URL` | adresse à laquelle l'application est servie, sans barre finale | `http://localhost:8000` |
+| `APP_TIMEZONE` | fuseau horaire de PHP et de la connexion MySQL | `Africa/Ndjamena` |
 
 `BASE_URL` doit correspondre exactement à la façon dont l'application est servie (étape 5) :
 elle sert aux redirections après connexion et après chaque formulaire. Les chemins vers les
 feuilles de style et les images sont relatifs et n'en dépendent pas.
 
-Le fichier fixe aussi le fuseau horaire (`Africa/Ndjamena`, `+01:00`) pour PHP et pour la
-connexion MySQL : les délais (24 h pour déposer un justificatif) sont calculés de la même façon
-des deux côtés. Ne pas le modifier sans changer les deux valeurs ensemble.
+`APP_TIMEZONE` s'applique aux deux côtés à la fois : `config/database.php` aligne le fuseau de
+la connexion MySQL sur celui de PHP, pour que les délais (24 h pour déposer un justificatif)
+soient calculés de la même façon.
 
-`config/config.php` est une copie ancienne du même fichier ; l'application ne le charge pas.
-Il peut être supprimé.
+Une variable d'environnement du système portant le même nom a priorité sur le fichier : sur un
+serveur, les accès peuvent être fournis par l'hébergeur sans fichier `.env`. Sans fichier et sans
+variables, l'application s'arrête avec un message explicite au lieu de tenter une connexion.
 
-Le fichier `config/database.php` est versionné avec les accès de développement. Sur un serveur,
-après l'avoir modifié, empêcher Git de proposer la modification :
-`git update-index --assume-unchanged config/database.php`.
+Le mot de passe MySQL et les autres secrets ne figurent dans aucun fichier suivi par Git :
+`config/database.php` ne contient que la lecture de `.env` et l'ouverture de la connexion.
 
 ## 5. Lancer l'application
 
@@ -154,8 +162,7 @@ déjà à cette adresse. `Ctrl+C` arrête le serveur.
 ### Option B : Apache de XAMPP
 
 1. Placer le projet dans `C:\xampp\htdocs\Formation_Humaine_CBS` (ou créer un lien).
-2. Dans `config/database.php`, mettre
-   `define('BASE_URL', 'http://localhost/Formation_Humaine_CBS/public');`
+2. Dans `.env`, mettre `BASE_URL=http://localhost/Formation_Humaine_CBS/public`
 3. Démarrer Apache depuis le panneau XAMPP et ouvrir
    `http://localhost/Formation_Humaine_CBS/public/`.
 
@@ -224,7 +231,9 @@ en une fois), puis redémarrer Apache.
 1. **Racine web** : pointer le `DocumentRoot` (Apache) ou `root` (Nginx) sur le dossier
    `public/`, jamais sur la racine du projet, pour que `config/`, `storage/`, `database/` et
    `documentation/` restent inaccessibles depuis le navigateur.
-2. **`BASE_URL`** : l'adresse publique, avec `https://` si un certificat est en place.
+2. **`.env`** : créer le fichier sur le serveur (ou fournir les variables par l'hébergeur) avec
+   un compte MySQL dédié et `BASE_URL` à l'adresse publique, avec `https://` si un certificat
+   est en place. Ne jamais copier le `.env` d'un poste de développement.
 3. **Erreurs PHP** : dans `public/index.php`, passer `display_errors` et
    `display_startup_errors` à `0` ; garder `log_errors` actif dans `php.ini` pour retrouver les
    erreurs dans le journal du serveur.
@@ -236,15 +245,21 @@ en une fois), puis redémarrer Apache.
    la main à la main). La marche à suivre pour brancher Resend est dans
    `documentation/courriel-resend.md`.
 7. **Mise à jour d'une base déjà en place** : la version actuelle rend `PERSONNE.DATE_NAISSANCE`
-   facultative. Sur une base créée avec une version antérieure de `schema.sql`, exécuter
-   `ALTER TABLE PERSONNE MODIFY DATE_NAISSANCE DATE NULL;`. Les autres évolutions du schéma sont
-   listées dans `documentation/base-de-donnees.md`.
+   facultative et ajoute la table `TENTATIVE_CONNEXION`. Sur une base créée avec une version
+   antérieure de `schema.sql`, exécuter `ALTER TABLE PERSONNE MODIFY DATE_NAISSANCE DATE NULL;`
+   et le `CREATE TABLE TENTATIVE_CONNEXION` donné dans `documentation/base-de-donnees.md`, qui
+   liste les autres évolutions du schéma.
+8. **Mise à jour d'un poste existant** : les accès ont quitté `config/database.php` ; après
+   `git pull`, créer `.env` (étape 4) avant de relancer l'application. Le mot de passe MySQL qui
+   figurait dans les anciennes versions du fichier reste dans l'historique Git : le changer
+   (`ALTER USER ... IDENTIFIED BY ...`) et reporter la nouvelle valeur dans `.env`.
 
 ## 9. Problèmes fréquents
 
 | Symptôme | Cause probable | Que faire |
 |---|---|---|
-| « Erreur de connexion à la base de données : Access denied » | utilisateur ou mot de passe MySQL différents de `config/database.php` | recréer l'utilisateur (3.2) ou corriger le fichier (4) |
+| « Erreur de connexion à la base de données : Access denied » | utilisateur ou mot de passe MySQL différents de `.env` | recréer l'utilisateur (3.2) ou corriger `.env` (4) |
+| « Fichier .env introuvable » | `.env` absent à la racine du projet | le créer à partir de `.env.example` (4) |
 | « Erreur de connexion … Unknown database » | scripts SQL non chargés | étape 3.3 |
 | Page blanche ou erreur 500 | extension PHP manquante, ou erreur dans un fichier | vérifier `php -m` (1) ; regarder le journal d'erreurs de PHP ; `php -l fichier.php` |
 | Après connexion, redirection vers une adresse qui n'existe pas | `BASE_URL` ne correspond pas à la façon dont l'application est servie | corriger `BASE_URL` (4 et 5) |
@@ -252,7 +267,7 @@ en une fois), puis redémarrer Apache.
 | Fichier refusé à l'envoi | taille au-dessus de 10 Mo, extension non prévue, ou contenu qui ne correspond pas à l'extension | envoyer un pdf, jpg, png, webp ou mp4 authentique ; vérifier `upload_max_filesize` (7) |
 | Accents cassés dans les listes (`Ã©`) | import SQL sans `utf8mb4` | recharger les trois scripts (3.3) |
 | Photos ou pièces jointes introuvables | dossiers d'écriture non accessibles à PHP | droits (7) |
-| Heures décalées d'une heure | fuseau horaire modifié d'un seul côté | remettre `Africa/Ndjamena` et `+01:00` ensemble (4) |
+| Heures décalées d'une heure | `APP_TIMEZONE` ne correspond pas au fuseau réel | corriger `APP_TIMEZONE` dans `.env` (4) |
 | `tests/recette.sh` échoue dès le rechargement | `mysql` introuvable ou compte différent | `MYSQL=/c/xampp/mysql/bin/mysql.exe bash tests/recette.sh`, ou `DB_USER` / `DB_PASS` (`documentation/tests.md`) |
 
 ## 10. Vérifier l'ensemble avec la recette

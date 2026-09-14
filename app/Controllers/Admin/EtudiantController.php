@@ -43,15 +43,18 @@ class EtudiantController extends PersonnelController {
         $semestre = null;
         $idSemestre = (int)$this->param('semestre', '0');
         $semestre = $idSemestre > 0 ? Etudiant::semestre($idSemestre) : Etudiant::semestreCourant();
+        // Le solde et le registre suivent points.consulter ; les dossiers, la même portée que la liste des signalements.
+        $voitPoints = $semestre && Auth::peut('points.consulter');
         $this->vue('etudiants/fiche', 'Fiche étudiant', 'etudiants', [
             'etudiant'     => $etudiant,
             'semestre'     => $semestre,
             'semestres'    => Etudiant::semestres(),
-            'solde'        => $semestre ? MouvementPoint::solde($id, $semestre['DATE_DEBUT'], $semestre['DATE_FIN']) : null,
-            'mouvements'   => $semestre ? MouvementPoint::liste($id, $semestre['DATE_DEBUT'], $semestre['DATE_FIN']) : [],
+            'voitPoints'   => Auth::peut('points.consulter'),
+            'solde'        => $voitPoints ? MouvementPoint::solde($id, $semestre['DATE_DEBUT'], $semestre['DATE_FIN']) : null,
+            'mouvements'   => $voitPoints ? MouvementPoint::liste($id, $semestre['DATE_DEBUT'], $semestre['DATE_FIN']) : [],
             'presences'    => $semestre ? Presence::liste($id, $semestre['DATE_DEBUT'], $semestre['DATE_FIN']) : [],
-            'dossiers'     => Signalement::pourEtudiant($id),
-            'resultat'     => $semestre ? Etudiant::resultat($id, (int)$semestre['ID_SEMESTRE']) : null,
+            'dossiers'     => Signalement::pourEtudiant($id, Auth::peut('signalements.consulter_tous') ? null : $this->id()),
+            'resultat'     => $voitPoints ? Etudiant::resultat($id, (int)$semestre['ID_SEMESTRE']) : null,
             'aHistorique'  => Personne::aUnHistorique($id),
             'motDePasse'   => $this->recupererMotDePasse($id),
             'jeton'        => Auth::jeton(),

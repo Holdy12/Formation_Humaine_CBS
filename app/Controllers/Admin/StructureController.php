@@ -101,8 +101,9 @@ class StructureController extends PersonnelController {
                 VALUES (:semestre, :personne, :note1, :note2, :mention1, 'CLOTURE', NOW())
                 ON DUPLICATE KEY UPDATE NOTE_PROVISOIRE = :note3, NOTE_FINALE = :note4, MENTION = :mention2, STATUT_VALIDATION = 'CLOTURE', DATE_CLOTURE = NOW()
             ");
+            $soldes = MouvementPoint::soldesParEtudiant($semestre['DATE_DEBUT'], $semestre['DATE_FIN']);
             foreach ($etudiants as $e) {
-                $solde = MouvementPoint::solde((int)$e['ID_PERSONNE'], $semestre['DATE_DEBUT'], $semestre['DATE_FIN']);
+                $solde = $soldes[(int)$e['ID_PERSONNE']] ?? MouvementPoint::calculer([]);
                 $note = round($solde['solde'], 2);
                 $mention = Structure::mention($note);
                 $stmt->execute(['semestre' => $idSemestre, 'personne' => (int)$e['ID_PERSONNE'],

@@ -22,12 +22,16 @@ class Signalement {
         LEFT JOIN PERSONNE va ON va.ID_PERSONNE = s.ID_PERSONNE_VALIDATEUR
         JOIN PERSONNE et ON et.ID_PERSONNE = s.ID_PERSONNE_ETUDIANT";
 
-    public static function pourEtudiant(int $idPersonne): array {
-        $stmt = Database::getConnection()->prepare(self::SELECT . "
-            WHERE s.ID_PERSONNE_ETUDIANT = :id AND s.STATUT <> 'BROUILLON'
-            ORDER BY s.DATE_SIGNALEMENT DESC
-        ");
-        $stmt->execute(['id' => $idPersonne]);
+    // Dossiers concernant un étudiant ; limités à ceux d'un auteur si $idAuteur est fourni.
+    public static function pourEtudiant(int $idPersonne, ?int $idAuteur = null): array {
+        $params = ['id' => $idPersonne];
+        $ou = "s.ID_PERSONNE_ETUDIANT = :id AND s.STATUT <> 'BROUILLON'";
+        if ($idAuteur !== null) {
+            $ou .= " AND s.ID_PERSONNE_AUTEUR = :auteur";
+            $params['auteur'] = $idAuteur;
+        }
+        $stmt = Database::getConnection()->prepare(self::SELECT . " WHERE $ou ORDER BY s.DATE_SIGNALEMENT DESC");
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 

@@ -51,6 +51,34 @@ class MouvementPoint {
     }
 
     public static function solde(int $idPersonne, string $debut, string $fin): array {
+        return self::calculer(self::totauxParDomaine($idPersonne, $debut, $fin));
+    }
+
+    // Soldes de tous les étudiants ayant des mouvements sur la période, en une requête, indexés par ID_PERSONNE.
+    // Un étudiant absent du tableau est au capital initial : utiliser calculer([]).
+    public static function soldesParEtudiant(string $debut, string $fin): array {
+        $stmt = Database::getConnection()->prepare("
+            SELECT m.ID_PERSONNE, d.CODE_DOMAINE, d.NOM_DOMAINE,
+                   COALESCE(SUM(CASE WHEN m.TYPE_MOUVEMENT = 'POSITIF' THEN m.NOMBRE_POINTS END), 0) AS POSITIF,
+                   COALESCE(SUM(CASE WHEN m.TYPE_MOUVEMENT = 'NEGATIF' THEN m.NOMBRE_POINTS END), 0) AS NEGATIF
+            FROM MOUVEMENT_POINTS m
+            JOIN CRITERE c ON c.ID_CRITERE = m.ID_CRITERE
+            JOIN DOMAINE d ON d.ID_DOMAINE = c.ID_DOMAINE
+            WHERE m.DATE_MOUVEMENT >= :debut AND m.DATE_MOUVEMENT < DATE_ADD(:fin, INTERVAL 1 DAY)
+              AND " . self::HORS_CORRECTIONS . "
+            GROUP BY m.ID_PERSONNE, d.ID_DOMAINE, d.CODE_DOMAINE, d.NOM_DOMAINE
+            ORDER BY m.ID_PERSONNE, d.ID_DOMAINE
+        ");
+        $stmt->execute(['debut' => $debut, 'fin' => $fin]);
+        $totaux = [];
+        foreach ($stmt->fetchAll() as $ligne) {
+            $totaux[(int)$ligne['ID_PERSONNE']][] = $ligne;
+        }
+        return array_map([self::class, 'calculer'], $totaux);
+    }
+
+    // Applique les plafonds par domaine et les bornes de la note à des totaux (CODE_DOMAINE, NOM_DOMAINE, POSITIF, NEGATIF).
+    public static function calculer(array $totaux): array {
         $capital = Parametre::nombre('CAPITAL_INITIAL_NOTE', 20);
         $minimum = Parametre::nombre('NOTE_MINIMALE_POSSIBLE', 0);
         $maximum = Parametre::nombre('NOTE_MAXIMALE_POSSIBLE', 20);
@@ -58,7 +86,7 @@ class MouvementPoint {
         $domaines = [];
         $penalites = 0.0;
         $bonus = 0.0;
-        foreach (self::totauxParDomaine($idPersonne, $debut, $fin) as $d) {
+        foreach ($totaux as $d) {
             $plafond = isset(self::PLAFONDS[$d['CODE_DOMAINE']]) ? Parametre::nombre(self::PLAFONDS[$d['CODE_DOMAINE']], 0) : null;
             $positif = (float)$d['POSITIF'];
             $d['POSITIF'] = $positif;

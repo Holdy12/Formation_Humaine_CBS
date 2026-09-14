@@ -4,16 +4,14 @@ require_once __DIR__ . '/../../core/Auth.php';
 require_once __DIR__ . '/../../core/Icone.php';
 require_once __DIR__ . '/../../core/Journal.php';
 require_once __DIR__ . '/../Models/Personne.php';
+require_once __DIR__ . '/../Models/TentativeConnexion.php';
 
 class AuthController {
-    private const ECHECS_MAX = 5;
-    private const BLOCAGE_SECONDES = 30;
-
     private const MESSAGES = [
         'auth_echouee'   => "Identifiant ou mot de passe incorrect.",
         'champs_vides'   => "Renseignez votre identifiant et votre mot de passe.",
         'compte_inactif' => "Ce compte est désactivé. Rapprochez-vous de l'administration.",
-        'blocage'        => "Trop de tentatives. Patientez trente secondes avant de réessayer.",
+        'blocage'        => "Trop de tentatives. Patientez dix minutes avant de réessayer.",
         'acces_interdit' => "Cette page n'est pas accessible avec votre compte.",
         'role_inconnu'   => "Votre compte n'a pas d'espace associé. Contactez l'administration.",
         'session'        => "La session a expiré, veuillez recommencer.",
@@ -53,24 +51,19 @@ class AuthController {
         if (!Auth::jetonValide()) {
             Auth::rediriger('login', ['erreur' => 'session']);
         }
-        if (!empty($_SESSION['blocage_jusqua']) && $_SESSION['blocage_jusqua'] > time()) {
-            Auth::rediriger('login', ['erreur' => 'blocage']);
-        }
         $identifiant = trim($_POST['identifiant'] ?? '');
         $motDePasse = $_POST['password'] ?? '';
         $_SESSION['identifiant_saisi'] = mb_substr($identifiant, 0, 100);
         if ($identifiant === '' || $motDePasse === '') {
             Auth::rediriger('login', ['erreur' => 'champs_vides']);
         }
+        if (TentativeConnexion::bloque($identifiant)) {
+            Auth::rediriger('login', ['erreur' => 'blocage']);
+        }
 
         $personne = Personne::trouverParIdentifiant($identifiant);
         if (!$personne || !password_verify($motDePasse, $personne['MOT_DE_PASSE'])) {
-            $echecs = (int)($_SESSION['echecs_connexion'] ?? 0) + 1;
-            $_SESSION['echecs_connexion'] = $echecs;
-            if ($echecs >= self::ECHECS_MAX) {
-                $_SESSION['blocage_jusqua'] = time() + self::BLOCAGE_SECONDES;
-                $_SESSION['echecs_connexion'] = 0;
-            }
+            TentativeConnexion::enregistrerEchec($identifiant);
             Journal::ecrire('Connexion', 'Échec pour l\'identifiant ' . mb_substr($identifiant, 0, 60), 'ECHEC', $personne ? (int)$personne['ID_PERSONNE'] : null);
             Auth::rediriger('login', ['erreur' => 'auth_echouee']);
         }
@@ -79,6 +72,7 @@ class AuthController {
             Auth::rediriger('login', ['erreur' => 'compte_inactif']);
         }
 
+        TentativeConnexion::effacer($identifiant);
         Auth::connecter($personne);
         Journal::ecrire('Connexion', 'Ouverture de session');
         if (!empty($_SESSION['doit_changer_mdp'])) {
