@@ -18,6 +18,8 @@ abstract class PersonnelController {
         if (!$personne || $personne['STATUT_COMPTE'] !== 'ACTIF') {
             Auth::deconnecter();
         }
+        // Un changement de rôle par l'administrateur s'applique dès la requête suivante.
+        $_SESSION['user_role'] = strtoupper($personne['CODE_ROLE']);
         $this->utilisateur = $personne;
     }
 

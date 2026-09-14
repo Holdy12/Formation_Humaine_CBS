@@ -39,7 +39,6 @@ class ClubController extends PersonnelController {
         if ($nom === '') {
             $this->retour('admin_clubs', "Le nom du club est obligatoire.", false);
         }
-        unset($_SESSION['anime_un_club']);
         if ($id > 0) {
             Club::modifier($id, $nom, $description, $responsable);
             Journal::ecrire('Club', 'Club modifié : ' . $nom);
@@ -62,6 +61,9 @@ class ClubController extends PersonnelController {
             Club::retirerMembre((int)$club['ID_CLUB'], $idPersonne);
             Journal::ecrire('Club', $etudiant['MATRICULE'] . ' retiré du club ' . $club['NOM_CLUB']);
             $this->retour('admin_club', "Membre retiré du club.", true, ['id' => (int)$club['ID_CLUB']]);
+        }
+        if (!empty($etudiant['ID_CLUB']) && (int)$etudiant['ID_CLUB'] !== (int)$club['ID_CLUB']) {
+            $this->retour('admin_club', "Cet étudiant est déjà membre du club " . $etudiant['NOM_CLUB'] . ".", false, ['id' => (int)$club['ID_CLUB']]);
         }
         Club::ajouterMembre((int)$club['ID_CLUB'], $idPersonne);
         Journal::ecrire('Club', $etudiant['MATRICULE'] . ' ajouté au club ' . $club['NOM_CLUB']);

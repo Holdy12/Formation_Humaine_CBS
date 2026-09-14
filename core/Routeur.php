@@ -84,11 +84,12 @@ class Routeur {
         }
         [$classe, $methode, $permission] = self::ROUTES[$action];
         Auth::exigerPersonnel();
+        require_once __DIR__ . '/../app/Controllers/Admin/' . $classe . '.php';
+        // Le constructeur recharge le compte (statut, rôle) avant le contrôle de permission.
+        $controleur = new $classe();
         if ($permission !== null) {
             Auth::exigerPermission($permission);
         }
-        require_once __DIR__ . '/../app/Controllers/Admin/' . $classe . '.php';
-        $controleur = new $classe();
         try {
             $controleur->$methode();
         } catch (PDOException $e) {

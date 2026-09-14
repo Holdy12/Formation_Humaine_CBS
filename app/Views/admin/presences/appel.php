@@ -8,7 +8,7 @@
 <form method="get" action="index.php" class="barre-filtres">
     <input type="hidden" name="action" value="admin_appel">
     <label class="filtre-groupe"><span>Cible</span>
-        <select name="cible" onchange="this.form.submit()">
+        <select name="cible" onchange="if (this.form.seance) this.form.seance.value = ''; this.form.submit()">
             <option value="">Choisir</option>
             <?php if (!empty($promotions)): ?>
             <optgroup label="Promotions">

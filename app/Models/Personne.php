@@ -112,7 +112,8 @@ class Personne {
 
     public static function aUnHistorique(int $idPersonne): bool {
         $db = Database::getConnection();
-        foreach (['PRESENCE' => 'ID_PERSONNE', 'MOUVEMENT_POINTS' => 'ID_PERSONNE', 'SIGNALEMENT' => 'ID_PERSONNE_ETUDIANT', 'RESULTAT_SEMESTRIEL' => 'ID_PERSONNE'] as $table => $colonne) {
+        $liens = [['PRESENCE', 'ID_PERSONNE'], ['MOUVEMENT_POINTS', 'ID_PERSONNE'], ['SIGNALEMENT', 'ID_PERSONNE_ETUDIANT'], ['SIGNALEMENT', 'ID_PERSONNE_AUTEUR'], ['RESULTAT_SEMESTRIEL', 'ID_PERSONNE']];
+        foreach ($liens as [$table, $colonne]) {
             $stmt = $db->prepare("SELECT 1 FROM $table WHERE $colonne = :id LIMIT 1");
             $stmt->execute(['id' => $idPersonne]);
             if ($stmt->fetchColumn()) {
@@ -168,12 +169,13 @@ class Personne {
         $db = Database::getConnection();
         $motDePasse = self::genererMotDePasseTemporaire();
         $stmt = $db->prepare("
-            INSERT INTO PERSONNE (ID_ROLE, NOM, PRENOM, EMAIL, MOT_DE_PASSE, TELEPHONE, SEXE, STATUT_COMPTE, DOIT_CHANGER_MDP)
-            VALUES (:role, :nom, :prenom, :email, :mdp, :tel, :sexe, 'ACTIF', 1)
+            INSERT INTO PERSONNE (ID_ROLE, NOM, PRENOM, EMAIL, MOT_DE_PASSE, TELEPHONE, SEXE, STATUT_COMPTE, DOIT_CHANGER_MDP, MATRICULE)
+            VALUES (:role, :nom, :prenom, :email, :mdp, :tel, :sexe, 'ACTIF', 1, :matricule)
         ");
         $stmt->execute([
             'role' => $d['id_role'], 'nom' => $d['nom'], 'prenom' => $d['prenom'], 'email' => $d['email'],
             'mdp' => password_hash($motDePasse, PASSWORD_DEFAULT), 'tel' => $d['telephone'], 'sexe' => $d['sexe'],
+            'matricule' => self::genererMatricule('PER', '-'),
         ]);
         return ['id' => (int)$db->lastInsertId(), 'motDePasse' => $motDePasse];
     }

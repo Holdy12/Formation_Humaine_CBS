@@ -100,6 +100,9 @@ solde = CAPITAL_INITIAL_NOTE
 borné à [NOTE_MINIMALE_POSSIBLE ; NOTE_MAXIMALE_POSSIBLE]
 ```
 
+Un mouvement corrigé et son écriture inverse s'annulent : aucun des deux n'entre dans les sommes
+ni dans le calcul des plafonds.
+
 Plafonds lus dans `PARAMETRE_SYSTEME` : `PLAFOND_BONUS_ECOLOGIE`, `PLAFOND_BONUS_CITOYENNETE`,
 `PLAFOND_BONUS_CLUB`, associés aux domaines `ECOLOGIE`, `CITOYENNETE`, `CLUB`. Le domaine
 `DISCIPLINE` n'a pas de bonification.

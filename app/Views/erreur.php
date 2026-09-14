@@ -19,6 +19,6 @@
         </div>
         <p class="erreur-pied">Formation Humaine CBS</p>
     </main>
-    <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/espace.js"></script>
 </body>
 </html>

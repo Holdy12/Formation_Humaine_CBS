@@ -1,4 +1,4 @@
-<?php $temporaire = $_SESSION['mot_de_passe_temporaire'] ?? null; unset($_SESSION['mot_de_passe_temporaire']); ?>
+<?php $temporaire = $_SESSION['mot_de_passe_personnel'] ?? null; unset($_SESSION['mot_de_passe_personnel']); ?>
 <div class="dashboard-header">
     <div>
         <h2>Comptes du personnel</h2>

@@ -85,7 +85,7 @@ verif "14 appel : séance, appel, 2 présences, aucun point" "$(sql "SELECT CONC
 printf 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' | base64 -d > "$TMP/preuve.png"
 JET=$(page a2 etudiant_signaler | jeton)
 curl -s -b "$TMP/a2.txt" -o /dev/null -F "jeton=$JET" -F "etudiant=6" -F "critere=3" -F "titre=Retard repete" -F "date_faits=2026-09-12T09:00" -F "lieu=Salle B2" -F "description=Troisieme retard." -F "preuves[]=@$(chemin_local "$TMP/preuve.png");type=image/png" "$URL?action=etudiant_signaler"
-verif "15 signalement créé avec une preuve" "$(sql "SELECT CONCAT(s.STATUT, ':', COUNT(p.ID_PIECE)) FROM SIGNALEMENT s LEFT JOIN PIECE_JUSTIFICATIVE p ON p.ID_SIGNALEMENT=s.ID_SIGNALEMENT WHERE s.TITRE_SIGNALEMENT='Retard repete' GROUP BY s.ID_SIGNALEMENT")" "SOUMIS:1"
+verif "15 signalement créé avec une preuve et son historique" "$(sql "SELECT CONCAT(s.STATUT, ':', COUNT(p.ID_PIECE), ':', (SELECT COUNT(*) FROM SIGNALEMENT_HISTORIQUE h WHERE h.ID_SIGNALEMENT=s.ID_SIGNALEMENT AND h.STATUT='SOUMIS')) FROM SIGNALEMENT s LEFT JOIN PIECE_JUSTIFICATIVE p ON p.ID_SIGNALEMENT=s.ID_SIGNALEMENT WHERE s.TITRE_SIGNALEMENT='Retard repete' GROUP BY s.ID_SIGNALEMENT")" "SOUMIS:1:1"
 verif "15b Moussa voit le nouveau dossier" "$(page m etudiant_signalements | grep -c 'Retard repete')" "1"
 verif "16 Awa ne peut pas se signaler elle-même" "$(curl -s -b "$TMP/a2.txt" -L -F "jeton=$JET" -F "etudiant=5" -F "critere=3" -F "titre=x" -F "date_faits=2026-09-12T09:00" -F "lieu=x" -F "description=x" "$URL?action=etudiant_signaler" | grep -c 'vous signaler vous-même')" "1"
 verif "17 Moussa n'accède pas à l'appel" "$(curl -s -b "$TMP/m.txt" -o /dev/null -w '%{redirect_url}' "$URL?action=etudiant_appel")" "$URL?action=etudiant_dashboard"
@@ -136,6 +136,10 @@ JET=$(page idriss admin_appel | jeton)
 verif "P12 un responsable de club ne fait pas l'appel d'une promotion" "$(curl -s -b "$TMP/idriss.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "promo=1" --data-urlencode "club=0" --data-urlencode "seance=0" --data-urlencode "titre=x" --data-urlencode "date=2026-09-12" --data-urlencode "debut=08:00" --data-urlencode "fin=10:00" --data-urlencode "lieu=x" "$URL?action=admin_appel" | grep -c 'que pour les clubs que vous animez')" "1"
 IDS=$(sql "SELECT ID_SEANCE FROM SEANCE WHERE TITRE_SEANCE='Sortie reboisement'")
 verif "P12b appel d'une séance à venir refusé" "$(curl -s -b "$TMP/idriss.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "seance=$IDS" --data-urlencode "club=1" --data-urlencode "statut[6]=PRESENT" "$URL?action=admin_appel" | grep -c 'pas encore eu lieu')" "1"
+JET=$(page enock admin_appel | jeton)
+curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "promo=1" --data-urlencode "club=0" --data-urlencode "seance=0" --data-urlencode "titre=Cours du jour" --data-urlencode "date=$(date +%Y-%m-%d)" --data-urlencode "debut=08:00" --data-urlencode "fin=10:00" --data-urlencode "lieu=A1" --data-urlencode "statut[5]=PRESENT" "$URL?action=admin_appel"
+IDS=$(sql "SELECT ID_SEANCE FROM SEANCE WHERE TITRE_SEANCE='Cours du jour'")
+verif "P12c séance datée du jour acceptée, second appel sur la même séance refusé" "$(sql "SELECT COUNT(*) FROM APPEL WHERE ID_SEANCE=${IDS:-0}") $(curl -s -b "$TMP/enock.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "promo=1" --data-urlencode "club=0" --data-urlencode "seance=${IDS:-0}" --data-urlencode "statut[5]=ABSENT" "$URL?action=admin_appel" | grep -c 'a déjà été enregistré') $(sql "SELECT COUNT(*) FROM APPEL WHERE ID_SEANCE=${IDS:-0}")" "1 1 1"
 A=$(page enock admin_assiduite); JET=$(echo "$A" | jeton); IDS_P=$(echo "$A" | grep -o 'name="presences\[\]" value="[0-9]*"' | grep -o '[0-9]*' | paste -sd,)
 ARGS=""; for i in $(echo "$IDS_P" | tr ',' ' '); do ARGS="$ARGS --data-urlencode presences[]=$i"; done
 curl -s -b "$TMP/enock.txt" -o /dev/null --data-urlencode "jeton=$JET" $ARGS "$URL?action=admin_assiduite_penaliser"
@@ -155,14 +159,14 @@ verif "P17 suppression d'une promotion rattachée refusée" "$(curl -s -b "$TMP/
 JET=$(page adm admin_clubs | jeton)
 curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "nom=Club Recette" --data-urlencode "description=" --data-urlencode "responsable=3" "$URL?action=admin_club_enregistrer"
 connexion mar2 marie.tchoua@cbs.local 'Test1234!' >/dev/null
-verif "P18 une enseignante désignée responsable accède à son club" "$(page mar2 admin_clubs | grep -c 'Club Recette') $(curl -s -b "$TMP/mar2.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_club&id=1")" "1 403"
+verif "P18 une enseignante désignée responsable accède à son club et garde l'appel des promotions" "$(page mar2 admin_clubs | grep -c 'Club Recette') $(curl -s -b "$TMP/mar2.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_club&id=1") $(page mar2 admin_appel | grep -c 'value="promo:1"')" "1 403 1"
 JET=$(page adm admin_bareme | jeton)
 curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "valeur[PLAFOND_BONUS_ECOLOGIE]=4" "$URL?action=admin_bareme_parametres"
 verif "P19 paramètre modifié et pris en compte" "$(sql "SELECT VALEUR FROM PARAMETRE_SYSTEME WHERE CODE_PARAMETRE='PLAFOND_BONUS_ECOLOGIE'") $(curl -s -b "$TMP/adm.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "valeur[PLAFOND_BONUS_ECOLOGIE]=-1" "$URL?action=admin_bareme_parametres" | grep -c 'nombre positif')" "4 1"
 JET=$(page adm admin_comptes | jeton)
 curl -s -b "$TMP/adm.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "nom=Bemba" --data-urlencode "prenom=Paul" --data-urlencode "email=paul.bemba@cbs.local" --data-urlencode "telephone=+235 60 00 00 09" --data-urlencode "role=4" --data-urlencode "sexe=M" "$URL?action=admin_compte_enregistrer"
 MDP=$(page adm admin_comptes | grep -o '<code class="mdp">[^<]*' | sed 's/.*>//')
-R=$(connexion paul paul.bemba@cbs.local "$MDP"); verif "P20 compte du personnel créé, mot de passe temporaire, première connexion" "$(sql "SELECT CONCAT(NOM, ':', DOIT_CHANGER_MDP) FROM PERSONNE WHERE EMAIL='paul.bemba@cbs.local'") ${R##*action=}" "BEMBA:1 premiere_connexion"
+R=$(connexion paul paul.bemba@cbs.local "$MDP"); verif "P20 compte du personnel créé avec matricule, mot de passe temporaire, première connexion" "$(sql "SELECT CONCAT(NOM, ':', DOIT_CHANGER_MDP, ':', MATRICULE LIKE 'PER-%') FROM PERSONNE WHERE EMAIL='paul.bemba@cbs.local'") ${R##*action=}" "BEMBA:1:1 premiere_connexion"
 verif "P20b l'administrateur ne peut pas se désactiver" "$(curl -s -b "$TMP/adm.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "id=1" "$URL?action=admin_compte_statut" | grep -c 'votre propre compte')" "1"
 verif "P21 rapports et exports" "$(page adm admin_rapports | grep -c 'Répartition des mentions') $(curl -s -b "$TMP/adm.txt" "$URL?action=admin_rapports_export&type=soldes" | head -1 | grep -c 'Matricule;Nom')" "1 1"
 verif "P22 journal : actions attribuées, accès réservé" "$(page adm admin_journal | grep -c 'badge-bleu') $(curl -s -b "$TMP/enock.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_journal")" "$(page adm admin_journal | grep -c 'badge-bleu') 403"

@@ -57,6 +57,9 @@ class StructureController extends PersonnelController {
                 if ($champ !== 'LIBELLE_SEMESTRE' && ($valeurs[$champ] === '' || $valeurs[$champ] === 0)) {
                     $this->retour('admin_structure', "Tous les champs sont obligatoires.", false, ['entite' => $entite]);
                 }
+                if (str_starts_with($champ, 'DATE_') && !Format::dateValide($valeurs[$champ])) {
+                    $this->retour('admin_structure', "Les dates doivent être au format AAAA-MM-JJ.", false, ['entite' => $entite]);
+                }
             }
             if (isset($valeurs['DATE_DEBUT'], $valeurs['DATE_FIN']) && $valeurs['DATE_FIN'] <= $valeurs['DATE_DEBUT']) {
                 $this->retour('admin_structure', "La date de fin doit être après la date de début.", false, ['entite' => $entite]);
@@ -69,6 +72,9 @@ class StructureController extends PersonnelController {
             Structure::creer($entite, $valeurs);
             Journal::ecrire('Structure', ucfirst($entite) . ' créé(e)');
             $this->retour('admin_structure', "Enregistrement ajouté.", true, ['entite' => $entite]);
+        } catch (PDOException $e) {
+            error_log('Structure : ' . $e->getMessage());
+            $this->retour('admin_structure', "L'enregistrement a été refusé par la base de données : vérifiez les valeurs saisies.", false, ['entite' => $entite]);
         } catch (RuntimeException $e) {
             $this->retour('admin_structure', $e->getMessage(), false, ['entite' => $entite]);
         }

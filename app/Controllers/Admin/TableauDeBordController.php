@@ -27,7 +27,7 @@ class TableauDeBordController extends PersonnelController {
             $this->tache($aTraiter, count(Presence::assiduiteAPenaliser()), 'horloge', 'absence ou retard à pénaliser', 'absences ou retards à pénaliser', 'admin_assiduite');
         }
         if (Auth::peut('appel.faire')) {
-            $clubs = Auth::peut('clubs.gerer') ? null : array_map(fn($c) => (int)$c['ID_CLUB'], Club::animesPar($this->id()));
+            $clubs = Auth::peut('appel.promotions') ? null : array_map(fn($c) => (int)$c['ID_CLUB'], Club::animesPar($this->id()));
             $seances = array_filter(Presence::seancesSansAppel(), fn($s) => $s['DATE_SEANCE'] <= date('Y-m-d') && ($clubs === null || in_array((int)($s['ID_CLUB'] ?? 0), $clubs, true)));
             $this->tache($aTraiter, count($seances), 'appel', 'séance passée sans appel', 'séances passées sans appel', 'admin_seances');
         }

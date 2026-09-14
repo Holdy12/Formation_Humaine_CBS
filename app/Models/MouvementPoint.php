@@ -12,6 +12,9 @@ class MouvementPoint {
         'CLUB'        => 'PLAFOND_BONUS_CLUB',
     ];
 
+    // Un mouvement corrigé et son écriture inverse s'annulent : aucun des deux n'entre dans les totaux ni dans les plafonds.
+    private const HORS_CORRECTIONS = "m.ID_MOUVEMENT_CORRIGE IS NULL AND NOT EXISTS (SELECT 1 FROM MOUVEMENT_POINTS x WHERE x.ID_MOUVEMENT_CORRIGE = m.ID_MOUVEMENT)";
+
     public static function liste(int $idPersonne, string $debut, string $fin): array {
         $stmt = Database::getConnection()->prepare("
             SELECT m.ID_MOUVEMENT, m.DATE_MOUVEMENT, m.NOMBRE_POINTS, m.TYPE_MOUVEMENT, m.MOTIF_MOUVEMENT, m.ID_SIGNALEMENT,
@@ -39,6 +42,7 @@ class MouvementPoint {
             LEFT JOIN MOUVEMENT_POINTS m ON m.ID_CRITERE = c.ID_CRITERE
                  AND m.ID_PERSONNE = :id
                  AND m.DATE_MOUVEMENT >= :debut AND m.DATE_MOUVEMENT < DATE_ADD(:fin, INTERVAL 1 DAY)
+                 AND " . self::HORS_CORRECTIONS . "
             GROUP BY d.ID_DOMAINE, d.CODE_DOMAINE, d.NOM_DOMAINE
             ORDER BY d.ID_DOMAINE
         ");
@@ -110,6 +114,7 @@ class MouvementPoint {
             JOIN CRITERE c ON c.ID_CRITERE = m.ID_CRITERE JOIN DOMAINE d ON d.ID_DOMAINE = c.ID_DOMAINE
             WHERE m.ID_PERSONNE = :id AND d.CODE_DOMAINE = :domaine AND m.TYPE_MOUVEMENT = 'POSITIF'
               AND m.DATE_MOUVEMENT >= :debut AND m.DATE_MOUVEMENT < DATE_ADD(:fin, INTERVAL 1 DAY)
+              AND " . self::HORS_CORRECTIONS . "
         ");
         $stmt->execute(['id' => $idPersonne, 'domaine' => $codeDomaine, 'debut' => $debut, 'fin' => $fin]);
         return max(0, $plafond - (float)$stmt->fetchColumn());

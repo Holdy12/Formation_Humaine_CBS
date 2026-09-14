@@ -17,9 +17,9 @@ class EspaceEtudiantController {
 
     public function __construct() {
         $fiche = Etudiant::fiche(Auth::idPersonne());
-        if (!$fiche) {
+        if (!$fiche || $fiche['STATUT_COMPTE'] !== 'ACTIF') {
             session_destroy();
-            Auth::rediriger('login', ['erreur' => 'acces_interdit']);
+            Auth::rediriger('login', ['erreur' => $fiche ? 'compte_inactif' : 'acces_interdit']);
         }
         $this->etudiant = $fiche;
     }
@@ -291,7 +291,7 @@ class EspaceEtudiantController {
                 'statut' => [],
             ];
             $erreur = null;
-            $date = DateTime::createFromFormat('Y-m-d', $saisie['date']);
+            $date = DateTime::createFromFormat('!Y-m-d', $saisie['date']);
             $debut = DateTime::createFromFormat('H:i', $saisie['debut']);
             $fin = DateTime::createFromFormat('H:i', $saisie['fin']);
             if ($saisie['titre'] === '' || $saisie['lieu'] === '' || mb_strlen($saisie['titre']) > 100 || mb_strlen($saisie['lieu']) > 50) {
@@ -384,13 +384,10 @@ class EspaceEtudiantController {
                         $chemin = Fichier::enregistrer($f, 'preuves', ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'mp4']);
                         $pieces[] = ['nom' => $f['name'], 'chemin' => $chemin, 'type' => strtolower(pathinfo($f['name'], PATHINFO_EXTENSION))];
                     }
-                    $idSignalement = Signalement::creer($moi, [
-                        'etudiant' => $saisie['etudiant'], 'critere' => $saisie['critere'], 'titre' => $saisie['titre'],
-                        'description' => $saisie['description'], 'dateFaits' => $dateFaits->format('Y-m-d H:i:00'), 'lieu' => $saisie['lieu'],
-                    ]);
-                    foreach ($pieces as $p) {
-                        Signalement::ajouterPiece($idSignalement, $p['nom'], $p['chemin'], $p['type']);
-                    }
+                    Signalement::creerPlusieurs($moi, [$saisie['etudiant']], [
+                        'critere' => $saisie['critere'], 'titre' => $saisie['titre'], 'description' => $saisie['description'],
+                        'dateFaits' => $dateFaits->format('Y-m-d H:i:00'), 'lieu' => $saisie['lieu'],
+                    ], [], $pieces);
                     $this->retour('etudiant_signaler', "Signalement transmis au chargé de discipline.");
                 } catch (Exception $e) {
                     foreach ($pieces as $p) {

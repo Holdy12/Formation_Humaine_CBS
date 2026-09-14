@@ -10,9 +10,9 @@ require_once __DIR__ . '/../../Models/MouvementPoint.php';
 class PresenceController extends PersonnelController {
     private const STATUTS = ['PRESENT', 'RETARD', 'ABSENT'];
 
-    // Un responsable de club ne fait l'appel que pour les clubs qu'il anime.
+    // Sans appel.promotions, l'appel se limite aux clubs que l'on anime.
     private function limiteAuClub(): bool {
-        return !Auth::peut('etudiants.gerer') && !Auth::peut('signalements.instruire') && Auth::peut('club.animer');
+        return !Auth::peut('appel.promotions');
     }
 
     private function clubsDisponibles(): array {
@@ -80,6 +80,12 @@ class PresenceController extends PersonnelController {
     }
 
     private function enregistrerAppel(int $idSeance, int $idClub, int $idPromo, array &$saisie): ?string {
+        // Une séance planifiée impose sa cible : le club ou la promotion saisis ne sont pas pris en compte.
+        $seance = $idSeance > 0 ? Presence::seance($idSeance) : null;
+        if ($seance) {
+            $idClub = (int)($seance['ID_CLUB'] ?? 0);
+            $idPromo = (int)($seance['ID_PROMO'] ?? 0);
+        }
         if ($idClub > 0 && $this->limiteAuClub() && !Club::estAnimePar($idClub, $this->id())) {
             return "Vous ne pouvez faire l'appel que pour les clubs que vous animez.";
         }
@@ -87,12 +93,14 @@ class PresenceController extends PersonnelController {
             return "Vous ne pouvez faire l'appel que pour les clubs que vous animez.";
         }
 
-        $seance = $idSeance > 0 ? Presence::seance($idSeance) : null;
         if ($seance && $seance['DATE_SEANCE'] > date('Y-m-d')) {
             return "Cette séance n'a pas encore eu lieu : l'appel se fera le jour venu.";
         }
+        if ($seance && Presence::appelFait((int)$seance['ID_SEANCE'])) {
+            return "L'appel de cette séance a déjà été enregistré.";
+        }
         if (!$seance) {
-            $date = DateTime::createFromFormat('Y-m-d', $saisie['date']);
+            $date = DateTime::createFromFormat('!Y-m-d', $saisie['date']);
             $debut = DateTime::createFromFormat('H:i', $saisie['debut']);
             $fin = DateTime::createFromFormat('H:i', $saisie['fin']);
             if ($saisie['titre'] === '' || $saisie['lieu'] === '' || mb_strlen($saisie['titre']) > 100 || mb_strlen($saisie['lieu']) > 50) {
@@ -244,14 +252,15 @@ class PresenceController extends PersonnelController {
 
     public function penaliser(): void {
         $this->exigerPost();
-        $ids = array_map('intval', (array)($_POST['presences'] ?? []));
+        $ids = array_unique(array_map('intval', (array)($_POST['presences'] ?? [])));
         if (empty($ids)) {
             $this->retour('admin_assiduite', "Sélectionnez au moins une ligne à pénaliser.", false);
         }
         $appliquees = 0;
         $refus = [];
+        $lignes = array_column(Presence::assiduiteAPenaliser(), null, 'ID_PRESENCE');
         foreach ($ids as $idPresence) {
-            $ligne = Presence::presencePourPenalite($idPresence);
+            $ligne = $lignes[$idPresence] ?? null;
             if (!$ligne) {
                 continue;
             }

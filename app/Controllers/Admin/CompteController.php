@@ -44,13 +44,12 @@ class CompteController extends PersonnelController {
                 $this->retour('admin_comptes', "Vous ne pouvez pas changer votre propre rôle.", false);
             }
             Personne::modifierPersonnel($id, $d);
-            unset($_SESSION['anime_un_club']);
             Journal::ecrire('Compte', 'Compte modifié : ' . $d['prenom'] . ' ' . $d['nom']);
             $this->retour('admin_comptes', "Compte mis à jour.");
         }
         $resultat = Personne::creerPersonnel($d);
         Journal::ecrire('Compte', 'Compte créé : ' . $d['prenom'] . ' ' . $d['nom']);
-        $_SESSION['mot_de_passe_temporaire'] = ['nom' => $d['prenom'] . ' ' . $d['nom'], 'identifiant' => $d['email'], 'mdp' => $resultat['motDePasse']];
+        $_SESSION['mot_de_passe_personnel'] = ['nom' => $d['prenom'] . ' ' . $d['nom'], 'identifiant' => $d['email'], 'mdp' => $resultat['motDePasse']];
         $this->retour('admin_comptes', "Compte créé. Communiquez le mot de passe temporaire affiché ci-dessous : il ne sera plus visible ensuite.");
     }
 
@@ -82,7 +81,7 @@ class CompteController extends PersonnelController {
         }
         $mdp = Personne::reinitialiser($id);
         Journal::ecrire('Compte', 'Mot de passe réinitialisé : ' . $compte['PRENOM'] . ' ' . $compte['NOM']);
-        $_SESSION['mot_de_passe_temporaire'] = ['nom' => $compte['PRENOM'] . ' ' . $compte['NOM'], 'identifiant' => $compte['EMAIL'], 'mdp' => $mdp];
+        $_SESSION['mot_de_passe_personnel'] = ['nom' => $compte['PRENOM'] . ' ' . $compte['NOM'], 'identifiant' => $compte['EMAIL'], 'mdp' => $mdp];
         $this->retour('admin_comptes', "Mot de passe réinitialisé. Communiquez le mot de passe temporaire ci-dessous.");
     }
 
@@ -102,7 +101,7 @@ class CompteController extends PersonnelController {
         if ($telephone === '' || mb_strlen($telephone) > 100) {
             $this->retour('admin_mon_compte', "Le téléphone est obligatoire et limité à 100 caractères.", false);
         }
-        Personne::modifierCoordonnees($this->id(), $telephone, null);
+        Personne::modifierCoordonnees($this->id(), $telephone, $this->utilisateur['ADRESSE']);
         $this->retour('admin_mon_compte', "Coordonnées mises à jour.");
     }
 

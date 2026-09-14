@@ -143,6 +143,12 @@ class Presence {
         return $stmt->fetch() ?: null;
     }
 
+    public static function appelFait(int $idSeance): bool {
+        $stmt = Database::getConnection()->prepare("SELECT 1 FROM APPEL WHERE ID_SEANCE = :id LIMIT 1");
+        $stmt->execute(['id' => $idSeance]);
+        return (bool)$stmt->fetchColumn();
+    }
+
     public static function seances(array $f, int $debut, int $limite): array {
         $ou = ['1 = 1'];
         $params = [];
@@ -311,16 +317,6 @@ class Presence {
         ");
         $stmt->execute($params);
         return $stmt->fetchAll();
-    }
-
-    public static function presencePourPenalite(int $idPresence): ?array {
-        $lignes = self::assiduiteAPenaliser();
-        foreach ($lignes as $l) {
-            if ((int)$l['ID_PRESENCE'] === $idPresence) {
-                return $l;
-            }
-        }
-        return null;
     }
 
     // Critère d'assiduité : Discipline pour une séance de promotion, Participation aux clubs sinon.

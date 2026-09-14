@@ -35,6 +35,7 @@ et vérifiées par `Auth::exigerPermission()` dans les routes et `Auth::peut()` 
 | `signalements.instruire` (examen, audition, décision) | x | x | x | | |
 | `pieces.consulter` (pièces jointes ; l'auteur voit toujours les siennes) | x | x | x | | |
 | `appel.faire` | x | x | x | x | x |
+| `appel.promotions` (sinon : uniquement les clubs animés) | x | x | x | x | |
 | `justificatifs.valider` | x | x | x | | |
 | `assiduite.penaliser` | x | x | x | | |
 | `points.consulter` (registre global) | x | x | x | | |
@@ -102,8 +103,9 @@ dépendance Chart.js (graphiques rendus en CSS et SVG). `dashboard.css` reste la
 `public/index.php` conserve son `switch` pour la connexion, la déconnexion et les routes
 `etudiant_*`. Toute action commençant par `admin_` est confiée à `Routeur::traiter($action)`,
 qui lit une table `action → [contrôleur, méthode, permission]`, vérifie que l'utilisateur est
-connecté et fait partie du personnel, vérifie la permission, puis appelle la méthode. Une action
-inconnue affiche la page 404 ; une permission manquante la page 403.
+connecté et fait partie du personnel, recharge son compte (statut et rôle courants), vérifie la
+permission, puis appelle la méthode. Une action inconnue affiche la page 404 ; une permission
+manquante la page 403.
 
 Les anciennes actions (`dashboard`, `etudiants`, `voir_etudiant`…) redirigent vers leurs
 équivalentes `admin_*` pour ne casser aucun lien.
@@ -210,8 +212,10 @@ activité récente du journal, clubs animés avec accès direct à l'appel.
 ### Présences
 
 - Faire l'appel : cible = une promotion, ou un club que l'on anime ; soit une séance planifiée
-  sans appel, soit une nouvelle séance saisie sur place ; statut par étudiant ; enregistrement
-  de `SEANCE` (si nouvelle), `APPEL` et `PRESENCE`. Aucun point n'est écrit à cette étape.
+  sans appel, soit une nouvelle séance saisie sur place (datée du jour au plus tard) ; statut
+  par étudiant ; enregistrement de `SEANCE` (si nouvelle), `APPEL` et `PRESENCE`. Une séance
+  planifiée impose sa cible, et une séance dont l'appel est déjà enregistré est refusée. Aucun
+  point n'est écrit à cette étape.
 - Séances : liste et planification (club ou promotion, titre, date, heures, lieu) ; une séance
   planifiée peut recevoir son appel plus tard.
 - Justificatifs : file d'attente `EN_ATTENTE` ; consultation de la pièce ; « Valider » passe le
@@ -241,7 +245,7 @@ activité récente du journal, clubs animés avec accès direct à l'appel.
   La permission `club.animer` est acquise par le rôle ou par la désignation comme responsable
   d'un club, quel que soit le rôle (`Auth::peut()`).
 - Membres : ajout et retrait d'étudiants (sélecteur avec recherche), par le responsable du club
-  ou l'administration.
+  ou l'administration ; un étudiant déjà membre d'un autre club doit d'abord en être retiré.
 - Séances du club : planification et appel (voir Présences).
 
 ### Structure académique
@@ -353,15 +357,15 @@ Les cas ci-dessous sont rejoués par `tests/recette.sh` (préfixe `P`), après c
 | P9 | Validation d'une bonification au-delà du plafond du domaine | refusée, dossier inchangé |
 | P10 | Rejet d'un justificatif sans commentaire | refusé |
 | P11 | Validation d'un justificatif | `VALIDEE`, présence `ABSENT_JUSTIFIE`, commentaire visible par l'étudiant |
-| P12 | Responsable de club : appel d'une promotion, puis d'une séance à venir | refusés |
+| P12 | Responsable de club : appel d'une promotion, puis d'une séance à venir ; séance datée du jour, puis second appel sur la même séance | refusés ; acceptée, puis refusé |
 | P13 | Application groupée des pénalités d'assiduité, puis nouvel envoi | un mouvement par présence, aucune double pénalité |
 | P14 | Correction d'un mouvement, puis seconde correction | écriture inverse liée, seconde refusée |
 | P15 | Export CSV du registre | UTF-8 avec BOM, séparateur `;` |
 | P16 | Clôture du semestre, écriture pendant la clôture, réouverture | résultats figés avec mention et visibles par l'étudiant, écriture refusée, retour à `PROVISOIRE` |
 | P17 | Suppression d'une promotion avec des étudiants | refusée |
-| P18 | Enseignante désignée responsable d'un club | accès à son club, 403 sur un autre |
+| P18 | Enseignante désignée responsable d'un club | accès à son club, 403 sur un autre, appel des promotions conservé |
 | P19 | Modification d'un paramètre, puis valeur négative | prise en compte immédiate, refus |
-| P20 | Création d'un compte du personnel, première connexion, auto-désactivation | mot de passe temporaire, changement imposé, refus de se désactiver |
+| P20 | Création d'un compte du personnel, première connexion, auto-désactivation | matricule `PER-<année>-NNNN`, mot de passe temporaire, changement imposé, refus de se désactiver |
 | P21 | Rapports et export des notes | page et fichier CSV |
 | P22 | Journal : lecture par l'administrateur, accès du chargé de discipline | entrées attribuées, 403 |
 | P23 | Toutes les pages du personnel | aucune erreur PHP |

@@ -57,11 +57,12 @@ class Rapport {
         $stmt = Database::getConnection()->prepare("
             SELECT d.NOM_DOMAINE, d.CODE_DOMAINE,
                    COUNT(*) AS TOTAL,
-                   SUM(s.STATUT = 'VALIDE' OR s.STATUT = 'CLOTURE') AS VALIDES,
-                   SUM(s.STATUT = 'REJETE') AS REJETES,
+                   SUM(COALESCE(h.STATUT, s.STATUT) = 'VALIDE') AS VALIDES,
+                   SUM(COALESCE(h.STATUT, s.STATUT) = 'REJETE') AS REJETES,
                    SUM(s.STATUT IN ('SOUMIS', 'EN_EXAMEN', 'ETUDIANT_ENTENDU')) AS EN_COURS,
                    SUM(s.CONSEIL_DISCIPLINE = 1) AS CONSEILS
             FROM SIGNALEMENT s JOIN CRITERE c ON c.ID_CRITERE = s.ID_CRITERE JOIN DOMAINE d ON d.ID_DOMAINE = c.ID_DOMAINE
+            LEFT JOIN SIGNALEMENT_HISTORIQUE h ON h.ID_SIGNALEMENT = s.ID_SIGNALEMENT AND h.STATUT IN ('VALIDE', 'REJETE', 'ANNULE')
             WHERE s.STATUT <> 'BROUILLON' AND s.DATE_FAITS >= :debut AND s.DATE_FAITS < DATE_ADD(:fin, INTERVAL 1 DAY)
             GROUP BY d.ID_DOMAINE ORDER BY d.ID_DOMAINE
         ");

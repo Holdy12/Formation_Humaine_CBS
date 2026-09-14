@@ -5,6 +5,8 @@ require_once __DIR__ . '/Permissions.php';
 require_once __DIR__ . '/Erreur.php';
 
 class Auth {
+    private static ?bool $animeUnClub = null;
+
     public static function demarrer(): void {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -29,12 +31,12 @@ class Auth {
             return true;
         }
         if ($permission === 'club.animer' && self::estPersonnel()) {
-            if (!isset($_SESSION['anime_un_club'])) {
+            if (self::$animeUnClub === null) {
                 $stmt = Database::getConnection()->prepare("SELECT 1 FROM CLUB WHERE ID_RESPONSABLE = :id LIMIT 1");
                 $stmt->execute(['id' => self::idPersonne()]);
-                $_SESSION['anime_un_club'] = (bool)$stmt->fetchColumn();
+                self::$animeUnClub = (bool)$stmt->fetchColumn();
             }
-            return $_SESSION['anime_un_club'];
+            return self::$animeUnClub;
         }
         return false;
     }
@@ -107,7 +109,6 @@ class Auth {
         self::demarrer();
         session_regenerate_id(true);
         $_SESSION['user_id'] = (int)$personne['ID_PERSONNE'];
-        unset($_SESSION['anime_un_club']);
         $_SESSION['user_role'] = strtoupper($personne['CODE_ROLE']);
         $_SESSION['nom'] = $personne['NOM'];
         $_SESSION['prenom'] = $personne['PRENOM'];

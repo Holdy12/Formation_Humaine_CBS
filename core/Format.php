@@ -17,6 +17,12 @@ class Format {
         return $d ? date('d/m/Y \à H\hi', strtotime($d)) : '—';
     }
 
+    // Vrai pour une date AAAA-MM-JJ existante (le 30 février est refusé).
+    public static function dateValide(string $d): bool {
+        $date = DateTime::createFromFormat('!Y-m-d', $d);
+        return $date !== false && $date->format('Y-m-d') === $d;
+    }
+
     public static function heure(?string $h): string {
         return $h ? substr($h, 0, 5) : '—';
     }
