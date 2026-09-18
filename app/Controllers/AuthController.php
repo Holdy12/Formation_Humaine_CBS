@@ -1,5 +1,5 @@
 <?php
-// app/Controllers/AuthController.php — connexion, déconnexion, première connexion, mot de passe oublié.
+// app/Controllers/AuthController.php — connexion, déconnexion, première connexion, mot de passe oublié et réinitialisation.
 require_once __DIR__ . '/../../core/Auth.php';
 require_once __DIR__ . '/../../core/Icone.php';
 require_once __DIR__ . '/../../core/Journal.php';
@@ -24,6 +24,7 @@ class AuthController {
             'logout'              => $this->deconnexion(),
             'premiere_connexion'  => $this->premiereConnexion(),
             'mot_de_passe_oublie' => $this->motDePasseOublie(),
+            'reset_password'      => $this->resetPassword(),
             default               => Erreur::introuvable(),
         };
     }
@@ -51,6 +52,7 @@ class AuthController {
         if (!Auth::jetonValide()) {
             Auth::rediriger('login', ['erreur' => 'session']);
         }
+        
         $identifiant = trim($_POST['identifiant'] ?? '');
         $motDePasse = $_POST['password'] ?? '';
         $_SESSION['identifiant_saisi'] = mb_substr($identifiant, 0, 100);
@@ -62,6 +64,7 @@ class AuthController {
         }
 
         $personne = Personne::trouverParIdentifiant($identifiant);
+        
         if (!$personne || !password_verify($motDePasse, $personne['MOT_DE_PASSE'])) {
             TentativeConnexion::enregistrerEchec($identifiant);
             Journal::ecrire('Connexion', 'Échec pour l\'identifiant ' . mb_substr($identifiant, 0, 60), 'ECHEC', $personne ? (int)$personne['ID_PERSONNE'] : null);
@@ -90,7 +93,6 @@ class AuthController {
         if (Auth::idPersonne() > 0) {
             Journal::ecrire('Déconnexion', 'Fermeture de session');
         }
-        Auth::demarrer();
         $_SESSION = [];
         session_destroy();
         Auth::rediriger('login', ['erreur' => 'deconnecte']);
@@ -136,11 +138,86 @@ class AuthController {
     }
 
     public function motDePasseOublie(): void {
-        $this->vueAuth('mot_de_passe_oublie', 'Mot de passe oublié', ['message' => null, 'succes' => false]);
+        Auth::demarrer();
+        $message = null;
+        $succes = false;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = trim($_POST['email'] ?? '');
+            if ($email === '') {
+                $message = "Veuillez renseigner votre adresse e-mail.";
+            } else {
+                $token = Personne::enregistrerTokenReset($email);
+                if ($token) {
+                    $resetLink = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/index.php?action=reset_password&token=" . $token;
+                    
+                    $sujet = "Réinitialisation de votre mot de passe - CBS";
+                    $contenu = "Bonjour,\n\nCliquez sur le lien ci-dessous pour réinitialiser votre mot de passe :\n" . $resetLink . "\n\nCe lien expire dans 1 heure.";
+                    $headers = "From: no-reply@cbs.local";
+                    
+                    @mail($email, $sujet, $contenu, $headers);
+                    Journal::ecrire('Mot de passe', 'Demande de réinitialisation pour l\'e-mail ' . $email);
+                }
+                $succes = true;
+                $message = "Si un compte est associé à cet e-mail, un lien de réinitialisation y a été envoyé.";
+            }
+        }
+
+        $this->vueAuth('mot_de_passe_oublie', 'Mot de passe oublié', [
+            'message' => $message,
+            'succes'  => $succes
+        ]);
+    }
+
+    public function resetPassword(): void {
+        Auth::demarrer();
+        $token = $_GET['token'] ?? $_POST['token'] ?? '';
+        $message = null;
+        $succes = false;
+        $invalide = false;
+
+        $personne = Personne::trouverParTokenReset($token);
+        if (!$token || !$personne) {
+            $this->vueAuth('reset_password', 'Réinitialisation', [
+                'message' => "Le lien de réinitialisation est invalide ou a expiré.",
+                'succes' => false,
+                'invalide' => true
+            ]);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nouveau = $_POST['password'] ?? '';
+            $confirmation = $_POST['confirmation'] ?? '';
+
+            if (strlen($nouveau) < 8) {
+                $message = "Le mot de passe doit contenir au moins 8 caractères.";
+            } elseif ($nouveau !== $confirmation) {
+                $message = "La confirmation ne correspond pas au mot de passe.";
+            } else {
+                Personne::reinitialiserAvecToken($token, $nouveau);
+                Journal::ecrire('Mot de passe', 'Mot de passe réinitialisé avec succès via token');
+                $_SESSION['success_message'] = "Votre mot de passe a été modifié avec succès. Vous pouvez vous connecter.";
+                Auth::rediriger('login');
+            }
+        }
+
+        $this->vueAuth('reset_password', 'Réinitialisation', [
+            'message' => $message,
+            'succes' => $succes,
+            'token' => $token,
+            'invalide' => $invalide
+        ]);
     }
 
     private function vueAuth(string $nom, string $titre, array $data): void {
         extract($data);
-        require __DIR__ . '/../Views/auth/' . $nom . '.php';
+        $filePath = __DIR__ . '/../Views/auth/' . $nom . '.php';
+        if (!file_exists($filePath)) {
+            if ($nom === 'mot_de_passe_oublie') {
+                $filePath = __DIR__ . '/../Views/auth/oubli_password.php';
+            }
+        }
+        require $filePath;
     }
 }

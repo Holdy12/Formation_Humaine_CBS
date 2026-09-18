@@ -1,14 +1,20 @@
-namespace App\Models;
+<?php
+// app/Models/Role.php
 
-use PDO;
-use App\Services\Database;
+require_once __DIR__ . '/../../config/database.php';
 
 class Role {
     public static function creer(string $libelle): bool {
-        $db = Database::getConnection();
-        $stmt = $db->prepare("INSERT INTO ROLE (LIBELLE) VALUES (:libelle)");
-        return $stmt->execute(['libelle' => $libelle]);
-    }
+    // Génère un code simple à partir du libellé (ex: "SECRETAIRE" -> "SEC" ou strtoupper)
+    $code = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $libelle), 0, 10));
+    
+    $db = Database::getConnection();
+    $stmt = $db->prepare("INSERT INTO ROLE (CODE_ROLE, LIBELLE_ROLE) VALUES (:code, :libelle)");
+    return $stmt->execute([
+        'code' => $code,
+        'libelle' => $libelle
+    ]);
+}
 
     public static function tous(): array {
         $db = Database::getConnection();

@@ -34,6 +34,7 @@
             <?php endif; ?>
         </div>
 
+
         <?php if (!empty($mesClubs)): ?>
         <div class="dashboard-card">
             <h3>Mes clubs</h3>

@@ -90,6 +90,9 @@ abstract class PersonnelController {
         if (Auth::peut('journal.consulter')) {
             $administration[] = $entree('journal', 'admin_journal', 'oeil', 'Journal');
         }
+        if (Auth::peut('roles.gerer') || Auth::peut('comptes.gerer')) {
+            $administration[] = $entree('roles', 'admin_roles', 'cadenas', 'Rôles et permissions');
+        }
         if ($administration) {
             $sections[] = ['titre' => 'Administration', 'entrees' => $administration];
         }
@@ -129,4 +132,23 @@ abstract class PersonnelController {
             'base'   => 'index.php?' . http_build_query($params),
         ];
     }
+
+
+    private function envoyerEmailBienvenue(string $destinataire, string $prenom, string $nom, string $matricule, string $mdp): void {
+    $sujet = "Vos identifiants d'accès - CBS Formation Humaine";
+    
+    $message = "Bonjour $prenom $nom,\n\n";
+    $message .= "Votre compte étudiant pour la Formation Humaine du CBS a été créé avec succès.\n\n";
+    $message .= "Voici vos informations de connexion :\n";
+    $message .= "- Matricule : $matricule\n";
+    $message .= "- E-mail : $destinataire\n";
+    $message .= "- Mot de passe temporaire : $mdp\n\n";
+    $message .= "Veuillez vous connecter sur la plateforme pour modifier votre mot de passe.\n\n";
+    $message .= "Cordialement,\nL'équipe pédagogique.";
+
+    $headers = "From: no-reply@cbs.local\r\n" .
+               "X-Mailer: PHP/" . phpversion();
+
+    @mail($destinataire, $sujet, $message, $headers);
+}
 }

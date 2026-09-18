@@ -58,6 +58,9 @@ class Routeur {
         'admin_rapports'                 => ['RapportController', 'index', 'rapports.consulter'],
         'admin_rapports_export'          => ['RapportController', 'exporter', 'rapports.consulter'],
         'admin_journal'                  => ['JournalController', 'index', 'journal.consulter'],
+        'admin_roles'                    => ['RoleController', 'index', 'comptes.gerer'],
+        'admin_roles_creer'              => ['RoleController', 'creer', 'comptes.gerer'],
+        'admin_roles_modifier'           => ['RoleController', 'modifier', 'comptes.gerer'],
     ];
 
     // Anciennes actions conservées pour ne casser aucun lien.

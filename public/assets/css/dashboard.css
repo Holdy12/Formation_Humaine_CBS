@@ -469,3 +469,4 @@ body.dark-mode .activity-table th {
   .shortcuts-grid, 
   .collapsible-links { grid-template-columns: repeat(2, 1fr); }
 }
+

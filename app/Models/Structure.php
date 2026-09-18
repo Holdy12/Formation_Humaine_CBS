@@ -11,6 +11,7 @@ class Structure {
         'filiere'     => ['table' => 'FILIERE',          'cle' => 'ID_FILIERE',  'colonnes' => ['ID_DEPT', 'CODE_FILIERE', 'NOM_FILIERE'], 'tri' => 'NOM_FILIERE'],
         'niveau'      => ['table' => 'NIVEAU',           'cle' => 'ID_NIVEAU',   'colonnes' => ['CODE_NIVEAU', 'LIBELLE_NIVEAU'], 'tri' => 'ID_NIVEAU'],
         'promotion'   => ['table' => 'PROMOTION',        'cle' => 'ID_PROMO',    'colonnes' => ['ID_ANNEE', 'ID_NIVEAU', 'ID_FILIERE', 'CODE_PROMO'], 'tri' => 'CODE_PROMO'],
+        'role'        => ['table' => 'ROLE',             'cle' => 'ID_ROLE',     'colonnes' => ['CODE_ROLE', 'LIBELLE_ROLE'], 'tri' => 'ID_ROLE'],
     ];
 
     public static function promotions(): array {
