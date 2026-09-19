@@ -34,7 +34,7 @@ prénom) dès qu'une session existe, et mène au tableau de bord du rôle.
 
 D'une page à l'autre, le navigateur enchaîne les pages sans coupure (`@view-transition`, CSS
 seul) : la nouvelle page monte du bas de l'écran par-dessus l'ancienne, qui s'assombrit
-derrière ; l'en-tête reste en place. Les navigateurs qui ne le gèrent pas (Firefox à ce jour)
+derrière, en un peu plus d'une seconde ; l'en-tête reste en place. Les navigateurs qui ne le gèrent pas (Firefox à ce jour)
 chargent la page normalement ; la page de connexion y participe aussi.
 
 ## 2. Modifier un texte, un numéro, une photo
@@ -113,8 +113,12 @@ composés comme une carte de visite.
 Les photos sont traitées comme des tirages qu'on prend en main. Avec une souris, elles attendent
 en tons sable et encre ; sous le pointeur elles s'inclinent vers lui en 3D, reprennent leurs
 couleurs, accrochent un reflet qui suit le pointeur et se soulèvent de la page (`site.js`). Les
-photos pleine largeur (accueil, bandeau de la vie étudiante) ne s'inclinent pas, leurs bords
-sortant de l'écran. Sur téléphone et tablette, elles sont toujours en couleur.
+grandes photos d'ouverture ne s'inclinent pas, leurs bords sortant de l'écran. Sur téléphone et
+tablette, et sur tout écran étroit, elles sont toujours en couleur.
+
+La page Vie étudiante s'ouvre sur la photo des étudiants devant le portail, pleine largeur et en
+couleur, le titre posé sur une plaque sable qui mord sur le bas de la photo ; à l'arrivée, la
+photo recule doucement d'un léger agrandissement et la plaque monte.
 
 Un clic, un toucher ou Entrée (chaque photo est un bouton) ouvre la photo en grand dans une
 boîte de dialogue native (`<dialog>`, sans bibliothèque) : Échap, un clic à côté ou, au toucher,

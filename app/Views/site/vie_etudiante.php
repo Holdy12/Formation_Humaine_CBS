@@ -1,10 +1,16 @@
 <?php // app/Views/site/vie_etudiante.php — attend $contenu, $connecte, $lienEspace
 $photos = $contenu['photos'];
 ?>
-        <section class="page-tete">
-            <p class="surtitre">Vie étudiante et Formation Humaine</p>
-            <h1>Ce que le CBS attend de ses étudiants, et comment il le mesure.</h1>
-            <p class="grand">La Formation Humaine est la manière dont le CBS suit, explique et valorise le comportement de chaque étudiant : présence, engagement dans les clubs, respect du campus, action citoyenne.</p>
+        <section class="vie-hero">
+            <figure class="vie-hero-photo">
+                <?= Composant::photo($photos['portail'], '100vw', true) ?>
+                <figcaption><?= htmlspecialchars($photos['portail']['legende']) ?></figcaption>
+            </figure>
+            <div class="vie-hero-plaque">
+                <p class="surtitre">Vie étudiante et Formation Humaine</p>
+                <h1>Ce que le CBS attend de ses étudiants, et comment il le mesure.</h1>
+                <p class="grand">La Formation Humaine est la manière dont le CBS suit, explique et valorise le comportement de chaque étudiant : présence, engagement dans les clubs, respect du campus, action citoyenne.</p>
+            </div>
         </section>
 
         <section class="bloc">
@@ -16,11 +22,6 @@ $photos = $contenu['photos'];
                 <p><?= htmlspecialchars($contenu['pourquoi']) ?></p>
             </div>
         </section>
-
-        <figure class="photo-pleine photo-debord cadre-photo">
-            <?= Composant::photo($photos['portail'], '100vw') ?>
-            <figcaption><?= htmlspecialchars($photos['portail']['legende']) ?></figcaption>
-        </figure>
 
         <section class="bloc bloc-domaines bande-encre">
             <div class="bloc-titre">

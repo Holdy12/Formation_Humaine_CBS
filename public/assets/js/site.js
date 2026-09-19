@@ -34,10 +34,10 @@
         marquer();
     }
 
-    // Photos : inclinaison vers le pointeur et reflet qui le suit. Pas pour les photos pleine
-    // largeur (accueil, bandeau), dont les bords sortent de l'écran.
+    // Photos : inclinaison vers le pointeur et reflet qui le suit. Pas pour les grandes photos
+    // d'ouverture (accueil, vie étudiante), dont les bords sortent de l'écran.
     document.querySelectorAll('.photo').forEach(function (photo) {
-        if (photo.closest('.accueil-hero-photo, .photo-debord')) return;
+        if (photo.closest('.accueil-hero-photo, .vie-hero-photo')) return;
         photo.addEventListener('pointermove', function (e) {
             if (!souris.matches || !bureau.matches || calme.matches) return;
             var r = photo.getBoundingClientRect();
@@ -92,7 +92,7 @@
     var cibles = [
         '.bloc-titre', '.reperes-phrase', '.accroche', '.capital', '.carte', '.etapes-courtes li',
         '.bloc-ecole .bloc-corps > div', '.tableau-cours li', '.photos-trio figure', '.bloc-photo',
-        '.bloc-photo-aside', '.photo-debord', '.registre-domaine', '.etapes li', '.frise li', '.calendrier',
+        '.bloc-photo-aside', '.registre-domaine', '.etapes li', '.frise li', '.calendrier',
         '.tableau', '.carte-contact', '.bloc-coordonnees figure', '.formulaire', '.bande-appel-interieur',
         '.site-pied-devise span'
     ].join(', ');

@@ -41,8 +41,8 @@
 .site-entete { view-transition-name: entete; }
 ::view-transition { background: var(--encre); }
 ::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; }
-::view-transition-old(root) { animation: 0.7s ease both vt-reculer; }
-::view-transition-new(root) { animation: 0.7s cubic-bezier(0.16, 1, 0.3, 1) both vt-monter; }
+::view-transition-old(root) { animation: 1.1s cubic-bezier(0.45, 0, 0.55, 1) both vt-reculer; }
+::view-transition-new(root) { animation: 1.1s cubic-bezier(0.76, 0, 0.24, 1) both vt-monter; }
 @keyframes vt-reculer { to { opacity: 0.45; transform: scale(0.97); } }
 @keyframes vt-monter { from { transform: translateY(100%); } }
 
@@ -153,7 +153,7 @@ a.bouton { text-decoration: none; }
 .page-tete h1 { font-size: clamp(2.75rem, 6vw, 5rem); max-width: 24ch; margin-bottom: 28px; }
 .page-tete .grand { max-width: 58ch; }
 .bloc { display: grid; grid-template-columns: 5fr 7fr; column-gap: 56px; row-gap: 40px; padding-top: 96px; padding-bottom: 96px; }
-.bloc + .bloc, .page-tete + .bloc, .photo-pleine + .bloc { border-top: 1px solid var(--sable-fonce); }
+.bloc + .bloc, .page-tete + .bloc { border-top: 1px solid var(--sable-fonce); }
 .bloc > * { min-width: 0; }
 .bloc-titre .note { margin-top: 12px; }
 .bloc-titre .lien-second { margin-top: 20px; }
@@ -168,7 +168,7 @@ a.bouton { text-decoration: none; }
 .bande-sable, .bande-encre { clip-path: inset(0 -100vmax); border-top: 0; }
 .bande-sable { background: var(--sable); box-shadow: 0 0 0 100vmax var(--sable); }
 .bande-encre { background: var(--encre); color: var(--sable); box-shadow: 0 0 0 100vmax var(--encre); }
-.bande-sable + .bloc, .bande-encre + .bloc, .bande-sable + .photo-pleine { border-top: 0; }
+.bande-sable + .bloc, .bande-encre + .bloc { border-top: 0; }
 .bande-encre h2, .bande-encre h3 { color: var(--papier); }
 .bande-encre .note, .bande-encre .registre-domaine > p, .bande-encre .registre-plafond, .bande-encre .capital-plafonds { color: var(--sable-texte); }
 
@@ -196,10 +196,6 @@ a.bouton { text-decoration: none; }
 }
 .cadre-photo figcaption { display: flex; align-items: baseline; gap: 10px; margin-top: 18px; font-size: 0.9375rem; color: var(--encre-2); }
 .cadre-photo figcaption::before { content: ""; flex: none; width: 7px; height: 7px; background: var(--brique); transform: translateY(-1px); }
-.photo-pleine { padding-top: 24px; padding-bottom: 72px; }
-.site-contenu > .photo-debord { max-width: none; padding: 0 0 72px; }
-.photo-debord img { max-height: 72vh; object-fit: cover; }
-.photo-debord figcaption { max-width: var(--largeur); margin: 18px auto 0; padding: 0 var(--gouttiere); }
 .bloc-photo-aside { max-width: 420px; margin-top: 40px; }
 
 /* Effets de survol : uniquement avec une souris ou un pavé tactile (hover: hover, pointer: fine).
@@ -288,6 +284,27 @@ a.bouton { text-decoration: none; }
   .carte { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .carte:active { transform: scale(0.98); }
 }
+
+/* Vie étudiante : la photo des étudiants d'abord, pleine largeur et en couleur ; le titre sur une
+   plaque sable qui mord sur le bas de la photo. À l'arrivée, la photo recule doucement d'un léger
+   agrandissement et la plaque monte. */
+.site-contenu > .vie-hero { max-width: none; padding: 0; position: relative; }
+.vie-hero-photo { position: relative; }
+.vie-hero-photo picture { height: min(80vh, 800px); }
+.vie-hero-photo img { height: 100%; object-fit: cover; object-position: center 30%; filter: none !important; animation: reculer 1.8s var(--sortie) both; }
+.vie-hero-photo figcaption { position: absolute; right: var(--gouttiere); bottom: 16px; display: flex; align-items: baseline; gap: 10px; padding: 6px 10px; background: rgba(28, 26, 23, 0.72); color: var(--sable); font-size: 0.875rem; }
+.vie-hero-photo figcaption::before { content: ""; flex: none; width: 7px; height: 7px; background: var(--orange); }
+.vie-hero-plaque {
+  position: relative; z-index: 1; width: min(calc(100% - 2 * var(--gouttiere)), 840px);
+  margin: -72px 0 0 max(var(--gouttiere), calc((100% - var(--largeur)) / 2 + var(--gouttiere)));
+  padding: 40px 48px 44px; background: var(--sable);
+  animation: monter-plaque 0.9s var(--sortie) 0.25s both;
+}
+.vie-hero-plaque h1 { font-size: clamp(2.25rem, 4.6vw, 4rem); max-width: 20ch; margin-bottom: 22px; }
+.vie-hero-plaque .grand { max-width: 56ch; }
+.vie-hero + .bloc { border-top: 0; }
+@keyframes reculer { from { scale: 1.08; } to { scale: 1; } }
+@keyframes monter-plaque { from { opacity: 0; translate: 0 48px; } to { opacity: 1; translate: 0 0; } }
 
 /* Accueil : bande sable à motif, titre pleine largeur, photo qui déborde à droite */
 .site-contenu > .accueil-hero { max-width: none; padding: 64px 0 0; }
@@ -489,6 +506,9 @@ fieldset.champ { border: 0; padding: 0; margin: 0; min-width: 0; }
   .site-nav-contact { display: flex; justify-content: space-between; gap: 16px; font-size: 0.9375rem; color: var(--sable-texte); }
   .site-nav-contact a { text-decoration: none; padding: 10px 0; }
 
+  .vie-hero-photo picture { height: 56vh; }
+  .vie-hero-photo figcaption { bottom: auto; top: 12px; right: 12px; }
+  .vie-hero-plaque { margin-top: -56px; padding: 28px 22px 32px; }
   .site-contenu > .accueil-hero { padding-top: 40px; }
   .accueil-hero { grid-template-columns: [bord-g] var(--gouttiere) [contenu-g] minmax(0, 1fr) [contenu-d] var(--gouttiere) [bord-d]; column-gap: 0; row-gap: 32px; }
   .accueil-hero::before { bottom: auto; height: 100%; }
