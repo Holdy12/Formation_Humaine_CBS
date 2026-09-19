@@ -265,9 +265,10 @@ en une fois), puis redémarrer Apache.
    la main à la main). La marche à suivre pour brancher Resend est dans
    `documentation/courriel-resend.md`.
 7. **Mise à jour d'une base déjà en place** : la version actuelle rend `PERSONNE.DATE_NAISSANCE`
-   facultative et ajoute les tables `TENTATIVE_CONNEXION` et `JETON_CONNEXION` (appareils
-   mémorisés, « rester connecté »). Sur une base créée avec une version antérieure de
-   `schema.sql`, exécuter `ALTER TABLE PERSONNE MODIFY DATE_NAISSANCE DATE NULL;` et les deux
+   facultative, lui ajoute `RESET_TOKEN` et `RESET_EXPIRES_AT` (mot de passe oublié) et ajoute
+   les tables `TENTATIVE_CONNEXION` et `JETON_CONNEXION` (appareils mémorisés, « rester
+   connecté »). Sur une base créée avec une version antérieure de `schema.sql`, exécuter
+   `ALTER TABLE PERSONNE MODIFY DATE_NAISSANCE DATE NULL;`, puis l'`ALTER TABLE` et les deux
    `CREATE TABLE` donnés dans `documentation/base-de-donnees.md`, qui liste les autres
    évolutions du schéma.
 8. **Mise à jour d'un poste existant** : les accès ont quitté `config/database.php` ; après

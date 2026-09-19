@@ -83,6 +83,10 @@ avec le dictionnaire des données et le document préparatoire.
      INDEX IDX_TENTATIVE_ADRESSE (ADRESSE_IP, DATE_TENTATIVE)
   ) ENGINE=InnoDB;
   ```
+- `PERSONNE.RESET_TOKEN`, `RESET_EXPIRES_AT` : lien « mot de passe oublié », valable une heure.
+  Seul le haché SHA-256 du jeton est conservé ; le lien est toujours construit sur `BASE_URL`.
+  Sur une base existante :
+  `ALTER TABLE PERSONNE ADD RESET_TOKEN VARCHAR(255) DEFAULT NULL, ADD RESET_EXPIRES_AT DATETIME DEFAULT NULL;`
 - `JETON_CONNEXION` : appareils mémorisés par la case « Rester connecté sur cet appareil » de la
   page de connexion. Le cookie porte `sélecteur.validateur` ; seul le haché du validateur est en
   base, et il est remplacé à chaque reprise de session (voir `documentation/site-vitrine.md`,

@@ -177,6 +177,7 @@ verif "P20b l'administrateur ne peut pas se désactiver" "$(curl -s -b "$TMP/adm
 verif "P21 rapports et exports" "$(page adm admin_rapports | grep -c 'Répartition des mentions') $(curl -s -b "$TMP/adm.txt" "$URL?action=admin_rapports_export&type=soldes" | head -1 | grep -c 'Matricule;Nom')" "1 1"
 verif "P22 journal : actions attribuées, accès réservé" "$(page adm admin_journal | grep -c 'badge-bleu') $(curl -s -b "$TMP/enock.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_journal")" "$(page adm admin_journal | grep -c 'badge-bleu') 403"
 verif "P23 aucune erreur PHP sur les pages du personnel" "$(for p in admin_dashboard admin_etudiants "admin_etudiant&id=6" admin_etudiant_nouveau admin_etudiants_import admin_signalements admin_signalement_nouveau "admin_signalement&id=$D1" admin_appel admin_seances admin_justificatifs admin_assiduite admin_points "admin_structure&entite=semestre" admin_clubs "admin_club&id=1" admin_bareme admin_comptes admin_mon_compte admin_rapports admin_journal; do page adm "$p"; done | grep -ci 'warning\|fatal\|notice\|deprecated')" "0"
+verif "P24 rôles : étudiante renvoyée vers son espace, enseignante refusée, administrateur admis" "$(curl -s -b "$TMP/a2.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_roles") $(curl -s -b "$TMP/mar.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_roles_creer") $(curl -s -b "$TMP/adm.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_roles")" "302 403 200"
 echo "--- cas de test : site vitrine et reconnexion ---"
 SITE="${URL%/index.php}"
 H=$(curl -s -D "$TMP/v1h.txt" -o "$TMP/v1b.txt" -w '%{http_code}' "$SITE/")
@@ -228,5 +229,11 @@ V1=$(awk '$6=="reconnexion"{print $7}' "$TMP/r7.txt")
 C1=$(curl -s -b "reconnexion=$V1" -o /dev/null -w '%{http_code}' "$URL?action=etudiant_dashboard")
 C2=$(curl -s -b "reconnexion=$V1" -o /dev/null -w '%{http_code}' "$URL?action=etudiant_dashboard")
 verif "R7  deux requêtes simultanées avec le même cookie : pas de faux vol, appareil conservé" "$C1 $C2 $(sql "SELECT COUNT(*) FROM JETON_CONNEXION WHERE ID_PERSONNE=7")" "200 200 1"
+connexion_rester r8 CBS2026-0003 'Test1234!' >/dev/null
+reinit() { sql "UPDATE PERSONNE SET RESET_TOKEN = SHA2('jeton-recette', 256), RESET_EXPIRES_AT = DATE_ADD(NOW(), INTERVAL 2 HOUR) WHERE ID_PERSONNE=7"; curl -s -o /dev/null --data-urlencode "token=jeton-recette" --data-urlencode "password=$1" --data-urlencode "confirmation=$1" "$URL?action=reset_password"; }
+reinit 'Reinit123!'
+verif "R8  mot de passe réinitialisé par lien : appareils mémorisés déconnectés, nouveau mot de passe actif" "$(sql "SELECT COUNT(*) FROM JETON_CONNEXION WHERE ID_PERSONNE=7") $(R=$(connexion r8b CBS2026-0003 'Reinit123!'); echo "${R##*action=}")" "0 etudiant_dashboard"
+reinit 'Test1234!'
+verif "R9  lien de réinitialisation construit sur BASE_URL, pas sur l'en-tête Host" "$("$PHP" -r '$_SERVER["HTTP_HOST"]="piege.example"; require "app/Controllers/AuthController.php"; echo str_starts_with(AuthController::lienReinitialisation("x"), BASE_URL . "/") ? "BASE_URL" : AuthController::lienReinitialisation("x");')" "BASE_URL"
 echo "--- résultat : $OK ok, $KO ko ---"
 [ $KO = 0 ]

@@ -154,7 +154,8 @@ Fonctionnement (`app/Models/JetonConnexion.php`, `core/Auth.php`) :
   30 secondes après le renouvellement (`VALIDATEUR_PRECEDENT`), sans nouveau renouvellement. Au-delà,
   il est traité comme un cookie volé.
 - Le jeton est supprimé à la déconnexion (bouton « Se déconnecter »), à tout changement de mot
-  de passe (première connexion, changement volontaire, réinitialisation par l'administration),
+  de passe (première connexion, changement volontaire, réinitialisation par l'administration ou
+  par le lien « mot de passe oublié »),
   à la désactivation du compte, et avec le compte lui-même. Les jetons expirés sont purgés à
   chaque création.
 
@@ -184,6 +185,8 @@ Rejoués par `tests/recette.sh` (voir `documentation/tests.md`).
 | R5 | Jeton expiré | redirection vers la connexion, jeton purgé |
 | R6 | Changement de mot de passe | jetons de la personne supprimés |
 | R7 | Même cookie présenté deux fois de suite | les deux requêtes servies, l'appareil reste mémorisé |
+| R8 | Mot de passe réinitialisé par le lien « mot de passe oublié » | appareils mémorisés déconnectés, nouveau mot de passe actif |
+| R9 | Lien de réinitialisation, requête avec un autre en-tête `Host` | lien construit sur `BASE_URL` |
 
 ## 7. À valider par l'école avant la mise en ligne
 

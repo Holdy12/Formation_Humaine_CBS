@@ -2,9 +2,9 @@
 
 L'application n'embarque pas de cadre de test. La recette est un script qui rejoue, contre une
 instance locale, les cas décrits dans `documentation/espace-etudiant.md` (section 5) et dans
-`documentation/espace-personnel.md` (section 6, cas `P1` à `P23`) et dans
+`documentation/espace-personnel.md` (section 6, cas `P1` à `P24`) et dans
 `documentation/site-vitrine.md` (section 6, cas `V1` à `V10` pour le site et son formulaire de
-contact, `R1` à `R7` pour la reconnexion automatique), plus quelques contrôles techniques : syntaxe PHP de tous les fichiers,
+contact, `R1` à `R9` pour la reconnexion automatique et la réinitialisation du mot de passe), plus quelques contrôles techniques : syntaxe PHP de tous les fichiers,
 absence d'avertissement PHP dans les pages, protection CSRF, contrôle des fichiers envoyés,
 respect des permissions par rôle.
 

@@ -153,7 +153,7 @@ class AuthController {
             } else {
                 $token = Personne::enregistrerTokenReset($email);
                 if ($token) {
-                    $resetLink = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/index.php?action=reset_password&token=" . $token;
+                    $resetLink = self::lienReinitialisation($token);
                     
                     $sujet = "Réinitialisation de votre mot de passe - CBS";
                     $contenu = "Bonjour,\n\nCliquez sur le lien ci-dessous pour réinitialiser votre mot de passe :\n" . $resetLink . "\n\nCe lien expire dans 1 heure.";
@@ -212,6 +212,12 @@ class AuthController {
             'token' => $token,
             'invalide' => $invalide
         ]);
+    }
+
+    // Toujours sur BASE_URL : construit à partir de l'en-tête Host de la requête, le lien pourrait
+    // pointer vers un autre site et y livrer un jeton valide (empoisonnement du lien).
+    public static function lienReinitialisation(string $token): string {
+        return BASE_URL . '/index.php?action=reset_password&token=' . rawurlencode($token);
     }
 
     private function vueAuth(string $nom, string $titre, array $data): void {

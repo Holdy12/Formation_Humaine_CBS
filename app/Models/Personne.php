@@ -219,9 +219,10 @@ class Personne {
         $token = bin2hex(random_bytes(32));
         $expiration = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
+        // Seul le haché est conservé : une copie de la base ne livre pas de lien utilisable.
         $update = $db->prepare("UPDATE PERSONNE SET RESET_TOKEN = :token, RESET_EXPIRES_AT = :expiration WHERE ID_PERSONNE = :id");
         $update->execute([
-            'token' => $token,
+            'token' => hash('sha256', $token),
             'expiration' => $expiration,
             'id' => $personne['ID_PERSONNE']
         ]);
@@ -232,7 +233,7 @@ class Personne {
     public static function trouverParTokenReset(string $token): ?array {
         $db = Database::getConnection();
         $stmt = $db->prepare("SELECT * FROM PERSONNE WHERE RESET_TOKEN = :token AND RESET_EXPIRES_AT > NOW()");
-        $stmt->execute(['token' => $token]);
+        $stmt->execute(['token' => hash('sha256', $token)]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
@@ -242,12 +243,9 @@ class Personne {
             return false;
         }
 
-        $hash = password_hash($nouveauMdp, PASSWORD_DEFAULT);
-        $db = Database::getConnection();
-        $stmt = $db->prepare("UPDATE PERSONNE SET MOT_DE_PASSE = :mdp, RESET_TOKEN = NULL, RESET_EXPIRES_AT = NULL, DOIT_CHANGER_MDP = 0 WHERE ID_PERSONNE = :id");
-        return $stmt->execute([
-            'mdp' => $hash,
-            'id' => $personne['ID_PERSONNE']
-        ]);
+        // changerMotDePasse() déconnecte aussi les appareils mémorisés.
+        self::changerMotDePasse((int)$personne['ID_PERSONNE'], $nouveauMdp, false);
+        $stmt = Database::getConnection()->prepare("UPDATE PERSONNE SET RESET_TOKEN = NULL, RESET_EXPIRES_AT = NULL WHERE ID_PERSONNE = :id");
+        return $stmt->execute(['id' => $personne['ID_PERSONNE']]);
     }
 }

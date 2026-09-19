@@ -2,9 +2,12 @@
 // public/index.php — point d'entrée unique
 require_once __DIR__ . '/../core/Env.php';
 
-// FORCER L'AFFICHAGE DES ERREURS TEMPORAIREMENT
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
+// Les erreurs ne s'affichent qu'en développement (APP_DEBUG=true dans .env) : en production elles
+// corrompraient les téléchargements (CSV, fichiers) et exposeraient les chemins du serveur.
+$debug = filter_var(Env::lire('APP_DEBUG', 'false'), FILTER_VALIDATE_BOOL);
+ini_set('display_errors', $debug ? '1' : '0');
+ini_set('display_startup_errors', $debug ? '1' : '0');
+ini_set('log_errors', '1');
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/../core/Routeur.php';
@@ -94,18 +97,7 @@ switch ($action) {
         require_once __DIR__ . '/../app/Controllers/EspaceEtudiantController.php';
         (new EspaceEtudiantController())->traiter($action);
         break;
-    
 
-case 'admin_roles':
-    case 'admin_roles_creer':
-        require_once __DIR__ . '/../app/Controllers/Admin/RoleController.php';
-        $controller = new RoleController();
-        if ($action === 'admin_roles') {
-            $controller->index();
-        } else {
-            $controller->creer();
-        }
-        break;
     default:
         if (str_starts_with($action, 'admin_') || Routeur::estConnue($action)) {
             Routeur::traiter($action);

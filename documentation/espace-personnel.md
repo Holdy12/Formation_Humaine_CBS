@@ -373,6 +373,7 @@ Les cas ci-dessous sont rejoués par `tests/recette.sh` (préfixe `P`), après c
 | P21 | Rapports et export des notes | page et fichier CSV |
 | P22 | Journal : lecture par l'administrateur, accès du chargé de discipline | entrées attribuées, 403 |
 | P23 | Toutes les pages du personnel | aucune erreur PHP |
+| P24 | Pages des rôles (`admin_roles`, `admin_roles_creer`) | étudiante renvoyée vers son espace, enseignante refusée (403), administrateur admis |
 
 ## 7. Évolutions prévues
 

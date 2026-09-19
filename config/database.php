@@ -22,14 +22,15 @@ class Database {
             }
             try {
                 self::$instance = new PDO(
-    "mysql:host=localhost;dbname=formation_humaine_db;charset=utf8mb4",
-    "Maurer",
-    "20031975", // 
-    [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-    ]
-);
+                    "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+                    DB_USER,
+                    DB_PASS,
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_EMULATE_PREPARES => false,
+                    ]
+                );
                 // Même fuseau horaire que PHP, pour que les délais soient calculés de la même façon des deux côtés.
                 self::$instance->exec("SET time_zone = '" . (new DateTime())->format('P') . "'");
             } catch (PDOException $e) {
