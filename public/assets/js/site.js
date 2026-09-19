@@ -46,13 +46,34 @@
             photo.classList.add('incline');
             photo.style.setProperty('--ry', ((x - 0.5) * 10).toFixed(2) + 'deg');
             photo.style.setProperty('--rx', ((0.5 - y) * 8).toFixed(2) + 'deg');
-            photo.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
-            photo.style.setProperty('--my', (y * 100).toFixed(1) + '%');
         });
         photo.addEventListener('pointerleave', function () {
             photo.classList.remove('incline');
-            ['--rx', '--ry', '--mx', '--my'].forEach(function (p) { photo.style.removeProperty(p); });
+            ['--rx', '--ry'].forEach(function (p) { photo.style.removeProperty(p); });
         });
+    });
+
+    // Le mur sous le pointeur : position du pointeur dans la couche de motif de chaque bande, une
+    // fois par image affichée. Les bandes sable et encre étendent leur fond à toute la largeur de
+    // l'écran : leur couche part du bord gauche de l'écran, pas de celui de la section.
+    document.querySelectorAll('.accueil-hero, .bande-sable, .bande-encre, .bande-appel, .site-pied').forEach(function (surface) {
+        var dernier = null, prevu = false;
+        var elargie = surface.matches('.bande-sable, .bande-encre');
+        surface.addEventListener('pointermove', function (e) {
+            if (!souris.matches || calme.matches) return;
+            dernier = e;
+            if (prevu) return;
+            prevu = true;
+            requestAnimationFrame(function () {
+                prevu = false;
+                var r = surface.getBoundingClientRect();
+                var gauche = elargie ? r.left + r.width / 2 - window.innerWidth / 2 : r.left;
+                surface.style.setProperty('--mx', Math.round(dernier.clientX - gauche) + 'px');
+                surface.style.setProperty('--my', Math.round(dernier.clientY - r.top) + 'px');
+                surface.classList.add('motif-actif');
+            });
+        });
+        surface.addEventListener('pointerleave', function () { surface.classList.remove('motif-actif'); });
     });
 
     // Cartes des domaines : le bouton retourne la carte (clavier, toucher) ; toucher la carte aussi.

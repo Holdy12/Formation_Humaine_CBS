@@ -32,6 +32,8 @@
   --glisse: cubic-bezier(0.65, 0, 0.35, 1);
   --motif-sable: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect x='10' y='10' width='8' height='8' fill='%23ffffff' fill-opacity='0.55'/%3E%3C/svg%3E");
   --motif-encre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect x='10' y='10' width='8' height='8' fill='%23000000' fill-opacity='0.35'/%3E%3C/svg%3E");
+  --motif-brique: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect x='10' y='10' width='8' height='8' fill='%23b8604f' fill-opacity='0.6'/%3E%3C/svg%3E");
+  --motif-lumiere: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect x='10' y='10' width='8' height='8' fill='%23f2ead9' fill-opacity='0.4'/%3E%3C/svg%3E");
 }
 
 /* Passage d'une page à l'autre : la nouvelle page monte du bas de l'écran par-dessus l'ancienne,
@@ -66,7 +68,7 @@
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 html.menu-ouvert { overflow: hidden; }
 body.site {
-  margin: 0; background: var(--papier); color: var(--encre);
+  margin: 0; background: var(--papier); color: var(--encre); overflow-x: clip;
   font-family: var(--police); font-size: 1.0625rem; line-height: 1.6;
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
@@ -82,7 +84,7 @@ small { font-size: 0.875em; }
 :focus-visible { outline: 2px solid var(--bleu); outline-offset: 3px; }
 
 /* Typographie : titres en Oswald, condensé comme le lettrage du logo et du portail ; texte en police système */
-h1 { font-family: var(--police-titre); font-weight: 700; text-transform: uppercase; font-size: clamp(2.625rem, 7.2vw, 5.75rem); line-height: 0.94; letter-spacing: 0.005em; max-width: 24ch; text-wrap: balance; }
+h1 { font-family: var(--police-titre); font-weight: 700; text-transform: uppercase; font-size: clamp(2.625rem, 7.2vw, 5.75rem); line-height: 1.14; letter-spacing: 0.005em; max-width: 24ch; text-wrap: balance; }
 h2 { font-family: var(--police-titre); font-weight: 600; font-size: clamp(2rem, 3.6vw, 3rem); line-height: 1.05; letter-spacing: 0.005em; text-wrap: balance; }
 h3 { font-family: var(--police-titre); font-weight: 500; font-size: 1.5rem; line-height: 1.2; }
 p { max-width: 62ch; }
@@ -173,8 +175,8 @@ a.bouton { text-decoration: none; }
 .bande-encre .note, .bande-encre .registre-domaine > p, .bande-encre .registre-plafond, .bande-encre .capital-plafonds { color: var(--sable-texte); }
 
 /* Photos : des tirages qu'on prend en main. Sur écran avec souris, la photo attend en tons sable et
-   encre ; sous le pointeur elle s'incline vers lui en 3D (site.js), reprend ses couleurs, accroche
-   un reflet et se soulève. Un clic l'ouvre en grand. Sur téléphone, toujours en couleur. */
+   encre ; sous le pointeur elle s'incline vers lui en 3D (site.js), reprend ses couleurs et se
+   soulève. Un clic l'ouvre en grand. Sur téléphone, toujours en couleur. */
 .photo {
   display: block; width: 100%; position: relative; padding: 0; border: 0; background: none;
   cursor: zoom-in; text-align: left; color: inherit;
@@ -183,7 +185,6 @@ a.bouton { text-decoration: none; }
 }
 .photo picture { display: block; overflow: hidden; }
 .photo img { display: block; width: 100%; height: auto; transition: transform 0.9s var(--sortie), filter 0.6s ease; }
-.photo::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.26), transparent 50%); opacity: 0; transition: opacity 0.4s ease; }
 .photo:focus-visible { outline: 2px solid var(--bleu); outline-offset: 4px; }
 /* Effets des photos : souris ET mise en page de bureau. Sur un écran étroit, les photos se comportent
    comme sur téléphone, même si l'appareil annonce une souris (fenêtre réduite, tablette avec pavé). */
@@ -191,7 +192,6 @@ a.bouton { text-decoration: none; }
   .photo img { filter: grayscale(1) sepia(0.5) saturate(0.8) contrast(1.02); }
   .photo:hover img, .photo:focus-visible img { filter: none; transform: scale(1.04); }
   .photo:hover { box-shadow: 0 34px 48px -30px rgba(28, 26, 23, 0.6); }
-  .photo:hover::after { opacity: 1; }
   .photo.incline { transition: transform 0.12s linear, box-shadow 0.6s var(--sortie); }
 }
 .cadre-photo figcaption { display: flex; align-items: baseline; gap: 10px; margin-top: 18px; font-size: 0.9375rem; color: var(--encre-2); }
@@ -216,6 +216,25 @@ a.bouton { text-decoration: none; }
   .tableau-cours li:hover::before { width: 0.42em; margin-right: 0.55em; transform: rotate(45deg); }
   .frise li:hover::before { transform: scale(1.15); }
   .puce-choix span:hover { background: var(--sable-fonce); }
+}
+
+/* Le mur sous le pointeur : sur les bandes et le pied de page, un cercle doux autour du pointeur
+   fait ressortir les blocs ajourés (brique sur le sable, sable sur l'encre). Derrière le contenu,
+   souris seulement ; site.js donne la position (--mx, --my) et la classe motif-actif. */
+@media (hover: hover) and (pointer: fine) {
+  .accueil-hero, .bande-sable, .bande-appel { --motif-vivant: var(--motif-brique); }
+  .bande-encre, .site-pied { --motif-vivant: var(--motif-lumiere); }
+  .bande-sable, .bande-encre, .bande-appel, .site-pied { position: relative; isolation: isolate; }
+  .accueil-hero::after, .bande-sable::after, .bande-encre::after, .bande-appel::after, .site-pied::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: -1; pointer-events: none;
+    background-image: var(--motif-vivant);
+    -webkit-mask-image: radial-gradient(circle 260px at var(--mx, -600px) var(--my, -600px), #000 0%, rgba(0, 0, 0, 0.55) 40%, transparent 100%);
+    mask-image: radial-gradient(circle 260px at var(--mx, -600px) var(--my, -600px), #000 0%, rgba(0, 0, 0, 0.55) 40%, transparent 100%);
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  .accueil-hero::after { bottom: 120px; }
+  .bande-sable::after, .bande-encre::after { left: 50%; right: auto; width: 100vw; translate: -50% 0; }
+  .motif-actif::after { opacity: 1; }
 }
 
 /* Visionneuse */
@@ -388,7 +407,7 @@ a.bouton { text-decoration: none; }
 .calendrier figcaption { margin-top: 14px; font-size: 0.9375rem; color: var(--encre-2); }
 
 /* Contact : l'adresse et les numéros composés comme une carte de visite */
-.carte-adresse { font-family: var(--police-titre); font-weight: 600; text-transform: uppercase; font-size: clamp(1.75rem, 3.4vw, 2.75rem); line-height: 1.02; letter-spacing: 0.01em; }
+.carte-adresse { font-family: var(--police-titre); font-weight: 600; text-transform: uppercase; font-size: clamp(1.75rem, 3.4vw, 2.75rem); line-height: 1.12; letter-spacing: 0.01em; }
 .carte-tel { margin-top: 20px; }
 .carte-tel span { display: block; margin-top: 6px; }
 .site-contenu .carte-tel a { text-decoration: none; }
@@ -446,7 +465,7 @@ fieldset.champ { border: 0; padding: 0; margin: 0; min-width: 0; }
 /* Pied de page : colophon, la devise en grand sur le motif */
 .site-pied { background: var(--encre) var(--motif-encre); color: var(--sable); }
 .site-pied-interieur { max-width: var(--largeur); margin: 0 auto; padding: 72px var(--gouttiere) 48px; display: grid; grid-template-columns: 5fr 3fr 4fr; gap: 40px; }
-.site-pied-devise { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4em; margin-bottom: 24px; font-family: var(--police-titre); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-size: clamp(2.25rem, 4.8vw, 3.75rem); line-height: 1; color: var(--sable); }
+.site-pied-devise { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4em; margin-bottom: 24px; font-family: var(--police-titre); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-size: clamp(2.25rem, 4.8vw, 3.75rem); line-height: 1.12; color: var(--sable); }
 .site-pied-devise span + span::before { content: "–"; margin-right: 0.4em; color: var(--orange); }
 .site-pied-nom { font-weight: 700; font-size: 1.25rem; margin-bottom: 12px; }
 .site-pied-adresse { font-size: 0.9375rem; color: var(--sable-texte); }

@@ -92,6 +92,11 @@ déjà visible à l'ouverture ne rejoue rien, tout ce qui reste s'affiche en bas
 JavaScript ou avec moins d'animations demandées, tout est affiché d'emblée. La liste des parties
 concernées est dans `site.js` (`cibles`).
 
+**Le mur sous le pointeur.** Sur la bande d'accueil, les bandes sable et sombres et le pied de
+page, un cercle doux autour du pointeur fait ressortir les blocs ajourés : brique sur le sable,
+sable sur l'encre. La couche est derrière le contenu et disparaît quand le pointeur quitte la
+bande ; souris seulement, coupée quand le système demande moins d'animations.
+
 **Menu sur petit écran.** Sous 880 px, le menu s'ouvre en plein écran sous l'en-tête, fond encre
 à motif, liens en grand qui montent l'un après l'autre, page courante en orange ; le bouton
 « Se connecter » et les contacts rapides sont en bas. La page derrière ne défile plus ; Échap ou
@@ -112,7 +117,7 @@ composés comme une carte de visite.
 
 Les photos sont traitées comme des tirages qu'on prend en main. Avec une souris, elles attendent
 en tons sable et encre ; sous le pointeur elles s'inclinent vers lui en 3D, reprennent leurs
-couleurs, accrochent un reflet qui suit le pointeur et se soulèvent de la page (`site.js`). Les
+couleurs et se soulèvent de la page (`site.js`). Rien ne vient se poser sur l'image elle-même. Les
 grandes photos d'ouverture ne s'inclinent pas, leurs bords sortant de l'écran. Sur téléphone et
 tablette, et sur tout écran étroit, elles sont toujours en couleur.
 
