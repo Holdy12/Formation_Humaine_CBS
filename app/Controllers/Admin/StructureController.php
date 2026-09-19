@@ -13,6 +13,7 @@ class StructureController extends PersonnelController {
         'filiere'     => ['titre' => 'Filières',           'champs' => ['ID_DEPT', 'CODE_FILIERE', 'NOM_FILIERE']],
         'niveau'      => ['titre' => 'Niveaux',            'champs' => ['CODE_NIVEAU', 'LIBELLE_NIVEAU']],
         'promotion'   => ['titre' => 'Promotions',         'champs' => ['ID_ANNEE', 'ID_NIVEAU', 'ID_FILIERE', 'CODE_PROMO']],
+        'role'        => ['titre' => 'Rôles',              'champs' => ['CODE_ROLE', 'LIBELLE_ROLE']],
     ];
 
     public function index(): void {
@@ -33,53 +34,73 @@ class StructureController extends PersonnelController {
             'departements'=> Structure::lister('departement'),
             'semestres'   => Structure::lister('semestre'),
             'promotions'  => Structure::promotions(),
+            'roles'       => Structure::lister('role'),
             'jeton'       => Auth::jeton(),
         ]);
     }
 
-    private function enregistrer(string $entite): void {
+   private function enregistrer(string $entite): void {
         Auth::verifierJeton();
         $operation = $_POST['op'] ?? '';
         $id = (int)($_POST['id'] ?? 0);
-        $valeurs = [];
-        foreach (self::ENTITES[$entite]['champs'] as $champ) {
-            $valeur = trim($_POST[$champ] ?? '');
-            $valeurs[$champ] = str_starts_with($champ, 'ID_') ? (int)$valeur : $valeur;
-        }
 
         try {
+            // 1. Traitement de la suppression (prioritaire et sans validation de champs)
             if ($operation === 'supprimer') {
+                if ($id <= 0) {
+                    $this->retour('admin_structure', "Identifiant invalide pour la suppression.", false, ['entite' => $entite]);
+                }
                 Structure::supprimer($entite, $id);
                 Journal::ecrire('Structure', ucfirst($entite) . ' supprimé(e) : ' . $id);
-                $this->retour('admin_structure', "Enregistrement supprimé.", true, ['entite' => $entite]);
+                $this->retour('admin_structure', "Enregistrement supprimé avec succès.", true, ['entite' => $entite]);
             }
+
+            // 2. Récupération et nettoyage des valeurs pour la création / modification
+            $valeurs = [];
             foreach (self::ENTITES[$entite]['champs'] as $champ) {
-                if ($champ !== 'LIBELLE_SEMESTRE' && ($valeurs[$champ] === '' || $valeurs[$champ] === 0)) {
-                    $this->retour('admin_structure', "Tous les champs sont obligatoires.", false, ['entite' => $entite]);
+                $valeur = trim($_POST[$champ] ?? '');
+                $valeurs[$champ] = str_starts_with($champ, 'ID_') ? (int)$valeur : $valeur;
+            }
+
+            // 3. Validation des champs obligatoires et des formats
+            foreach (self::ENTITES[$entite]['champs'] as $champ) {
+                // Champs optionnels tolérés (ex: libellé secondaire facultatif)
+                $estOptionnel = ($entite === 'semestre' && $champ === 'LIBELLE_SEMESTRE');
+
+                if (!$estOptionnel && ($valeurs[$champ] === '' || $valeurs[$champ] === 0)) {
+                    $this->retour('admin_structure', "Tous les champs obligatoires doivent être remplis.", false, ['entite' => $entite]);
                 }
+
                 if (str_starts_with($champ, 'DATE_') && !Format::dateValide($valeurs[$champ])) {
                     $this->retour('admin_structure', "Les dates doivent être au format AAAA-MM-JJ.", false, ['entite' => $entite]);
                 }
             }
+
+            // 4. Validation logique des dates (si présentes)
             if (isset($valeurs['DATE_DEBUT'], $valeurs['DATE_FIN']) && $valeurs['DATE_FIN'] <= $valeurs['DATE_DEBUT']) {
-                $this->retour('admin_structure', "La date de fin doit être après la date de début.", false, ['entite' => $entite]);
+                $this->retour('admin_structure', "La date de fin doit être postérieure à la date de début.", false, ['entite' => $entite]);
             }
+
+            // 5. Exécution de la modification ou de la création
+            $nomEntiteFeminine = in_array($entite, ['annee', 'filiere', 'promotion']) ? 'e' : ''; // Accord simple
+
             if ($operation === 'modifier' && $id > 0) {
                 Structure::modifier($entite, $id, $valeurs);
-                Journal::ecrire('Structure', ucfirst($entite) . ' modifié(e) : ' . $id);
-                $this->retour('admin_structure', "Enregistrement mis à jour.", true, ['entite' => $entite]);
+                Journal::ecrire('Structure', ucfirst($entite) . ' modifié' . $nomEntiteFeminine . ' : ' . $id);
+                $this->retour('admin_structure', "Enregistrement mis à jour avec succès.", true, ['entite' => $entite]);
             }
+
             Structure::creer($entite, $valeurs);
-            Journal::ecrire('Structure', ucfirst($entite) . ' créé(e)');
-            $this->retour('admin_structure', "Enregistrement ajouté.", true, ['entite' => $entite]);
+            Journal::ecrire('Structure', ucfirst($entite) . ' créé' . $nomEntiteFeminine);
+            $this->retour('admin_structure', "Enregistrement ajouté avec succès.", true, ['entite' => $entite]);
+
         } catch (PDOException $e) {
-            error_log('Structure : ' . $e->getMessage());
-            $this->retour('admin_structure', "L'enregistrement a été refusé par la base de données : vérifiez les valeurs saisies.", false, ['entite' => $entite]);
+            error_log('Structure Error (' . $entite . ') : ' . $e->getMessage());
+            $this->retour('admin_structure', "L'enregistrement a été refusé par la base de données : vérifiez les doublons ou les valeurs saisies.", false, ['entite' => $entite]);
         } catch (RuntimeException $e) {
             $this->retour('admin_structure', $e->getMessage(), false, ['entite' => $entite]);
         }
     }
-
     public function cloturer(): void {
         $this->exigerPost();
         Auth::exigerPermission('semestre.cloturer');

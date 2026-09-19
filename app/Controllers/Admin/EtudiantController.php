@@ -73,11 +73,30 @@ class EtudiantController extends PersonnelController {
                     if (Fichier::estPresent($_FILES['photo'] ?? [])) {
                         $saisie['photo'] = Fichier::enregistrerPublic($_FILES['photo'], 'assets/uploads', ['jpg', 'jpeg', 'png', 'webp']);
                     }
+                    
+                    // 1. Création de l'étudiant
                     $resultat = Personne::creerEtudiant($saisie);
                     Journal::ecrire('Étudiant', 'Création de ' . $saisie['nom'] . ' ' . $saisie['prenom'] . ' (' . $resultat['matricule'] . ')');
+                    
+                    // 2. Envoi optionnel de l'e-mail avec les identifiants
+                    $email = trim($saisie['email']);
+                    if ($email !== '') {
+                        $sujet = "Vos identifiants de connexion - Formation Humaine CBS";
+                        $contenu = "Bonjour " . $saisie['prenom'] . " " . $saisie['nom'] . ",\n\n"
+                                 . "Votre compte étudiant a été créé avec succès.\n"
+                                 . "Voici vos identifiants pour vous connecter :\n"
+                                 . "- Matricule ou email : " . $email . " (ou " . $resultat['matricule'] . ")\n"
+                                 . "- Mot de passe temporaire : " . $resultat['motDePasse'] . "\n\n"
+                                 . "Vous devrez modifier ce mot de passe lors de votre première connexion.\n";
+                        $headers = "From: no-reply@cbs.local\r\n";
+                        
+                        @mail($email, $sujet, $contenu, $headers);
+                    }
+
                     $_SESSION['mot_de_passe_temporaire'][$resultat['id']] = $resultat['motDePasse'];
-                    $this->retour('admin_etudiant', "Étudiant créé. Le mot de passe temporaire est affiché ci-dessous, une seule fois.", true, ['id' => $resultat['id']]);
-                } catch (Exception $e) {
+                    $this->retour('admin_etudiant', "Étudiant créé et identifiants envoyés par e-mail. Le mot de passe temporaire s'affiche aussi ci-dessous.", true, ['id' => $resultat['id']]);
+                
+                }catch (Exception $e) {
                     $erreur = $e->getMessage();
                 }
             }

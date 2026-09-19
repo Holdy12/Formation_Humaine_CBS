@@ -5,6 +5,7 @@
     </div>
 </div>
 
+
 <div class="dashboard-card">
     <h3>Nouveau critère</h3>
     <form method="post" action="index.php?action=admin_bareme_critere" class="formulaire formulaire-large">

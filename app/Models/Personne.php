@@ -4,8 +4,7 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/JetonConnexion.php';
 
 class Personne {
-    private const SELECT = "SELECT p.*, r.CODE_ROLE, r.LIBELLE_ROLE FROM PERSONNE p JOIN ROLE r ON r.ID_ROLE = p.ID_ROLE";
-
+    private const SELECT = "SELECT p.*, r.CODE_ROLE, r.LIBELLE_ROLE FROM PERSONNE p LEFT JOIN ROLE r ON r.ID_ROLE = p.ID_ROLE";
     public static function trouver(int $id): ?array {
         $stmt = Database::getConnection()->prepare(self::SELECT . " WHERE p.ID_PERSONNE = :id");
         $stmt->execute(['id' => $id]);
@@ -205,5 +204,50 @@ class Personne {
         $stmt = Database::getConnection()->prepare("SELECT MOT_DE_PASSE FROM PERSONNE WHERE ID_PERSONNE = :id");
         $stmt->execute(['id' => $id]);
         return (string)$stmt->fetchColumn();
+    }
+
+   public static function enregistrerTokenReset(string $email): ?string {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("SELECT ID_PERSONNE FROM PERSONNE WHERE EMAIL = :email AND STATUT_COMPTE = 'ACTIF'");
+        $stmt->execute(['email' => $email]);
+        $personne = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$personne) {
+            return null;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $expiration = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+        $update = $db->prepare("UPDATE PERSONNE SET RESET_TOKEN = :token, RESET_EXPIRES_AT = :expiration WHERE ID_PERSONNE = :id");
+        $update->execute([
+            'token' => $token,
+            'expiration' => $expiration,
+            'id' => $personne['ID_PERSONNE']
+        ]);
+
+        return $token;
+    }
+
+    public static function trouverParTokenReset(string $token): ?array {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("SELECT * FROM PERSONNE WHERE RESET_TOKEN = :token AND RESET_EXPIRES_AT > NOW()");
+        $stmt->execute(['token' => $token]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public static function reinitialiserAvecToken(string $token, string $nouveauMdp): bool {
+        $personne = self::trouverParTokenReset($token);
+        if (!$personne) {
+            return false;
+        }
+
+        $hash = password_hash($nouveauMdp, PASSWORD_DEFAULT);
+        $db = Database::getConnection();
+        $stmt = $db->prepare("UPDATE PERSONNE SET MOT_DE_PASSE = :mdp, RESET_TOKEN = NULL, RESET_EXPIRES_AT = NULL, DOIT_CHANGER_MDP = 0 WHERE ID_PERSONNE = :id");
+        return $stmt->execute([
+            'mdp' => $hash,
+            'id' => $personne['ID_PERSONNE']
+        ]);
     }
 }
