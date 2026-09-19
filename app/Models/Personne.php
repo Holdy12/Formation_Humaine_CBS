@@ -1,6 +1,7 @@
 <?php
 // app/Models/Personne.php — comptes (personnel et étudiants).
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/JetonConnexion.php';
 
 class Personne {
     private const SELECT = "SELECT p.*, r.CODE_ROLE, r.LIBELLE_ROLE FROM PERSONNE p JOIN ROLE r ON r.ID_ROLE = p.ID_ROLE";
@@ -98,9 +99,13 @@ class Personne {
         ]);
     }
 
+    // Un compte désactivé perd aussi ses appareils mémorisés.
     public static function changerStatut(int $id, string $statut): void {
         $stmt = Database::getConnection()->prepare("UPDATE PERSONNE SET STATUT_COMPTE = :statut WHERE ID_PERSONNE = :id");
         $stmt->execute(['statut' => $statut, 'id' => $id]);
+        if ($statut !== 'ACTIF') {
+            JetonConnexion::revoquerTous($id);
+        }
     }
 
     // Nouveau mot de passe temporaire, à changer à la prochaine connexion.
@@ -128,9 +133,11 @@ class Personne {
         $stmt->execute(['id' => $idPersonne]);
     }
 
+    // Tout changement de mot de passe déconnecte les appareils mémorisés.
     public static function changerMotDePasse(int $id, string $nouveau, bool $doitChanger = false): void {
         $stmt = Database::getConnection()->prepare("UPDATE PERSONNE SET MOT_DE_PASSE = :mdp, DOIT_CHANGER_MDP = :changer WHERE ID_PERSONNE = :id");
         $stmt->execute(['mdp' => password_hash($nouveau, PASSWORD_DEFAULT), 'changer' => $doitChanger ? 1 : 0, 'id' => $id]);
+        JetonConnexion::revoquerTous($id);
     }
 
     public static function modifierPhoto(int $id, ?string $chemin): void {

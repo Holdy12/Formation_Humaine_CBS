@@ -13,15 +13,16 @@ class Erreur {
     public static function introuvable(): never {
         $connecte = !empty($_SESSION['user_id']);
         $role = strtoupper($_SESSION['user_role'] ?? '');
-        $accueil = 'index.php?action=login';
+        // Un visiteur non connecté revient au site public (à la racine de l'application).
+        $accueil = './';
         if ($connecte && $role === 'ETUDIANT') {
             $accueil = 'index.php?action=etudiant_dashboard';
         } elseif ($connecte) {
             $accueil = 'index.php?action=dashboard';
         }
         self::afficher(404, "Cette page n'existe pas",
-            "L'adresse demandée ne correspond à aucune page de l'application. Elle a peut-être été déplacée, ou le lien est incomplet.",
-            $connecte ? "Retour à l'accueil" : "Aller à la connexion", $accueil, 'boussole');
+            "L'adresse demandée ne correspond à aucune page du site ni de l'application. Elle a peut-être été déplacée, ou le lien est incomplet.",
+            $connecte ? "Retour à l'accueil" : "Retour au site", $accueil, 'boussole');
     }
 
     public static function interdit(string $lienTexte, string $lienUrl): never {

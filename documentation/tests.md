@@ -2,9 +2,11 @@
 
 L'application n'embarque pas de cadre de test. La recette est un script qui rejoue, contre une
 instance locale, les cas décrits dans `documentation/espace-etudiant.md` (section 5) et dans
-`documentation/espace-personnel.md` (section 6, cas `P1` à `P23`), plus quelques contrôles
-techniques : syntaxe PHP de tous les fichiers, absence d'avertissement PHP dans les pages,
-protection CSRF, contrôle des fichiers envoyés, respect des permissions par rôle.
+`documentation/espace-personnel.md` (section 6, cas `P1` à `P23`) et dans
+`documentation/site-vitrine.md` (section 6, cas `V1` à `V10` pour le site et son formulaire de
+contact, `R1` à `R7` pour la reconnexion automatique), plus quelques contrôles techniques : syntaxe PHP de tous les fichiers,
+absence d'avertissement PHP dans les pages, protection CSRF, contrôle des fichiers envoyés,
+respect des permissions par rôle.
 
 ## Prérequis
 
@@ -41,7 +43,8 @@ DB_PASS=secret URL=http://localhost/Formation_Humaine_CBS/public/index.php bash 
 ## Ce que la recette ne couvre pas
 
 - Le rendu visuel (mise en page, mode sombre, affichage sur téléphone) : à vérifier dans un
-  navigateur, en particulier le tiroir de navigation sous 900 px et les tableaux repliés sous 700 px.
+  navigateur, en particulier le tiroir de navigation sous 900 px et les tableaux repliés sous 700 px,
+  et, pour le site vitrine, le menu sous 880 px et le chargement des photos en WebP.
 - L'impression du relevé : ouvrir « Relevé imprimable » puis l'aperçu avant impression du navigateur.
 - L'import CSV d'étudiants dans toutes ses variantes : le rapport d'aperçu se vérifie à la main
   avec le modèle téléchargé depuis la page d'import.
@@ -51,7 +54,9 @@ DB_PASS=secret URL=http://localhost/Formation_Humaine_CBS/public/index.php bash 
 ## Ajouter un cas
 
 Chaque cas est une ligne `verif "libellé" "valeur obtenue" "valeur attendue"`. Les fonctions
-`connexion`, `page`, `jeton` et `sql` évitent de répéter les appels `curl` et `mysql`. Les
+`connexion`, `connexion_rester` (avec la case « rester connecté »), `page`, `jeton` et `sql`
+évitent de répéter les appels `curl` et `mysql`. Les pages du site se demandent par leur chemin
+(`$SITE/formations`, où `SITE` est `URL` sans `/index.php`). Les
 comptes disponibles sont ceux de `database/donnees_test.sql` (mot de passe `Test1234!`) et
 l'administrateur de `seed.sql` (`admin@formation.local` / `Admin123!`). Les cas du personnel
 s'exécutent après ceux de l'espace étudiant et réutilisent les données que ceux-ci ont créées.

@@ -83,6 +83,25 @@ avec le dictionnaire des données et le document préparatoire.
      INDEX IDX_TENTATIVE_ADRESSE (ADRESSE_IP, DATE_TENTATIVE)
   ) ENGINE=InnoDB;
   ```
+- `JETON_CONNEXION` : appareils mémorisés par la case « Rester connecté sur cet appareil » de la
+  page de connexion. Le cookie porte `sélecteur.validateur` ; seul le haché du validateur est en
+  base, et il est remplacé à chaque reprise de session (voir `documentation/site-vitrine.md`,
+  section 5). Sur une base existante :
+
+  ```sql
+  CREATE TABLE JETON_CONNEXION (
+     ID_JETON INT AUTO_INCREMENT PRIMARY KEY,
+     ID_PERSONNE INT NOT NULL,
+     SELECTEUR CHAR(24) NOT NULL UNIQUE,
+     VALIDATEUR_HASH CHAR(64) NOT NULL,
+     VALIDATEUR_PRECEDENT CHAR(64) NULL,
+     DATE_CREATION DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     DATE_EXPIRATION DATETIME NOT NULL,
+     DATE_UTILISATION DATETIME NULL,
+     CONSTRAINT FK_JETON_PERSONNE FOREIGN KEY (ID_PERSONNE) REFERENCES PERSONNE (ID_PERSONNE) ON DELETE CASCADE,
+     INDEX IDX_JETON_PERSONNE (ID_PERSONNE)
+  ) ENGINE=InnoDB;
+  ```
 - `config/database.php` lit les accès dans `.env` (voir `installation.md`) et aligne le fuseau
   horaire de la connexion MySQL sur celui de PHP (`APP_TIMEZONE`, `Africa/Ndjamena` par défaut),
   afin que les délais soient calculés de la même façon des deux côtés.

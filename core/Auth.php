@@ -5,6 +5,10 @@ require_once __DIR__ . '/Permissions.php';
 require_once __DIR__ . '/Erreur.php';
 
 class Auth {
+    // Cookie « rester connecté » : voir JetonConnexion. Durée glissante, renouvelée à chaque reprise.
+    public const COOKIE_RECONNEXION = 'reconnexion';
+    public const DUREE_RECONNEXION = 10 * 24 * 3600;
+
     private static ?bool $animeUnClub = null;
 
     public static function demarrer(): void {
@@ -117,9 +121,74 @@ class Auth {
 
     public static function deconnecter(): never {
         self::demarrer();
+        self::oublier();
         $_SESSION = [];
         session_destroy();
         self::rediriger('login');
+    }
+
+    // Mémorise l'appareil : jeton en base et cookie de reconnexion.
+    public static function memoriser(int $idPersonne): void {
+        require_once __DIR__ . '/../app/Models/JetonConnexion.php';
+        self::deposerCookie(JetonConnexion::emettre($idPersonne), self::DUREE_RECONNEXION);
+    }
+
+    // Sans session ouverte mais avec un cookie de reconnexion valide, rouvre la session de la
+    // personne et renouvelle le jeton. Appelée à chaque requête depuis public/index.php.
+    public static function reprendre(): void {
+        $cookie = $_COOKIE[self::COOKIE_RECONNEXION] ?? '';
+        if ($cookie === '') {
+            return;
+        }
+        self::demarrer();
+        if (self::idPersonne() > 0) {
+            return;
+        }
+        require_once __DIR__ . '/../app/Models/JetonConnexion.php';
+        require_once __DIR__ . '/../app/Models/Personne.php';
+        require_once __DIR__ . '/Journal.php';
+        $jeton = JetonConnexion::verifier($cookie);
+        $personne = $jeton ? Personne::trouver((int)$jeton['ID_PERSONNE']) : null;
+        if (!$personne || $personne['STATUT_COMPTE'] !== 'ACTIF') {
+            if ($jeton) {
+                JetonConnexion::revoquer($jeton['SELECTEUR']);
+            }
+            self::deposerCookie('', 0);
+            return;
+        }
+        self::connecter($personne);
+        // Requête partie en même temps qu'une autre qui a déjà renouvelé le jeton : le navigateur
+        // garde le cookie déposé par celle-ci, on ne renouvelle pas une seconde fois.
+        if (!$jeton['CONCURRENT']) {
+            self::deposerCookie(JetonConnexion::renouveler($jeton), self::DUREE_RECONNEXION);
+        }
+        Journal::ecrire('Connexion', 'Reprise de session sur un appareil mémorisé');
+    }
+
+    // Révoque le jeton de cet appareil et efface le cookie (déconnexion).
+    public static function oublier(): void {
+        $cookie = $_COOKIE[self::COOKIE_RECONNEXION] ?? '';
+        if ($cookie === '') {
+            return;
+        }
+        if (preg_match('/^([a-f0-9]{24})\./', $cookie, $m)) {
+            require_once __DIR__ . '/../app/Models/JetonConnexion.php';
+            JetonConnexion::revoquer($m[1]);
+        }
+        self::deposerCookie('', 0);
+        unset($_COOKIE[self::COOKIE_RECONNEXION]);
+    }
+
+    // Une durée nulle efface le cookie. Le chemin suit le dossier de l'application (racine ou sous-dossier).
+    private static function deposerCookie(string $valeur, int $duree): void {
+        $chemin = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/\\');
+        setcookie(self::COOKIE_RECONNEXION, $valeur, [
+            'expires'  => $duree > 0 ? time() + $duree : 1,
+            'path'     => $chemin === '' ? '/' : $chemin,
+            'secure'   => str_starts_with(BASE_URL, 'https://'),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
     }
 
     public static function jeton(): string {

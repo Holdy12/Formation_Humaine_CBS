@@ -1,0 +1,522 @@
+/* public/assets/css/site.css — site vitrine. Indépendant des feuilles de l'application.
+   Couleurs prises sur le campus : murs sable, béton brique, uniformes bleus ; l'orange du logo est
+   réservé à l'action principale de chaque page. Deux motifs tirés du bâtiment reviennent partout :
+   le bloc ajouré des claustras (points, puces, boutons) et le losange des grilles du portail
+   (état actif : le bloc pivote en losange). */
+
+@font-face {
+  font-family: "Oswald";
+  src: url("../fonts/oswald.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+:root {
+  --papier: #ffffff;
+  --sable: #f2ead9;
+  --sable-fonce: #e2d5bb;
+  --sable-texte: #cbbfa6;
+  --encre: #1c1a17;
+  --encre-2: #5c554c;
+  --brique: #b8604f;
+  --brique-claire: #f0a08f;
+  --bleu: #1e3f8f;
+  --vert: #3d6b3a;
+  --vert-clair: #9ed49a;
+  --orange: #ff7f00;
+  --largeur: 1120px;
+  --gouttiere: 24px;
+  --police: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --police-titre: "Oswald", "Arial Narrow", "Segoe UI", system-ui, sans-serif;
+  --sortie: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --glisse: cubic-bezier(0.65, 0, 0.35, 1);
+  --motif-sable: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect x='10' y='10' width='8' height='8' fill='%23ffffff' fill-opacity='0.55'/%3E%3C/svg%3E");
+  --motif-encre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect x='10' y='10' width='8' height='8' fill='%23000000' fill-opacity='0.35'/%3E%3C/svg%3E");
+}
+
+/* Passage d'une page à l'autre, en claustra : l'ancienne page se referme en blocs sur le fond encre,
+   la nouvelle s'ouvre à travers des blocs qui grandissent ; l'en-tête ne bouge pas. Chaque carreau
+   du masque (48 px) laisse voir un carré centré dont le demi-côté est --claustra (0 % à 50 %).
+   Navigateurs sans transitions entre pages : chargement normal. */
+@view-transition { navigation: auto; }
+@property --claustra { syntax: "<percentage>"; inherits: false; initial-value: 50%; }
+.site-entete { view-transition-name: entete; }
+::view-transition { background: var(--encre); }
+::view-transition-old(root), ::view-transition-new(root) {
+  mix-blend-mode: normal;
+  --bord-a: calc(50% - var(--claustra)); --bord-b: calc(50% + var(--claustra));
+  -webkit-mask-image:
+    linear-gradient(to right, transparent var(--bord-a), #000 var(--bord-a) var(--bord-b), transparent var(--bord-b)),
+    linear-gradient(to bottom, transparent var(--bord-a), #000 var(--bord-a) var(--bord-b), transparent var(--bord-b));
+  mask-image:
+    linear-gradient(to right, transparent var(--bord-a), #000 var(--bord-a) var(--bord-b), transparent var(--bord-b)),
+    linear-gradient(to bottom, transparent var(--bord-a), #000 var(--bord-a) var(--bord-b), transparent var(--bord-b));
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-size: 48px 48px; mask-size: 48px 48px;
+  -webkit-mask-position: center; mask-position: center;
+}
+::view-transition-old(root) { animation: claustra-fermer 0.36s cubic-bezier(0.55, 0, 0.8, 0.4) both; }
+::view-transition-new(root) { animation: claustra-ouvrir 0.5s 0.26s cubic-bezier(0.2, 0.6, 0.35, 1) both; }
+@keyframes claustra-fermer { from { --claustra: 50%; } to { --claustra: 0%; } }
+@keyframes claustra-ouvrir { from { --claustra: 0%; } to { --claustra: 50%; } }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html.menu-ouvert { overflow: hidden; }
+body.site {
+  margin: 0; background: var(--papier); color: var(--encre);
+  font-family: var(--police); font-size: 1.0625rem; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+img, picture { max-width: 100%; }
+h1, h2, h3, p, ul, ol, dl, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; }
+button { font: inherit; }
+small { font-size: 0.875em; }
+.visuellement-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.site-evitement { position: absolute; left: var(--gouttiere); top: -60px; padding: 10px 14px; background: var(--encre); color: var(--sable); z-index: 20; }
+.site-evitement:focus { top: 12px; }
+:focus-visible { outline: 2px solid var(--bleu); outline-offset: 3px; }
+
+/* Typographie : titres en Oswald, condensé comme le lettrage du logo et du portail ; texte en police système */
+h1 { font-family: var(--police-titre); font-weight: 700; text-transform: uppercase; font-size: clamp(2.625rem, 7.2vw, 5.75rem); line-height: 0.94; letter-spacing: 0.005em; max-width: 24ch; text-wrap: balance; }
+h2 { font-family: var(--police-titre); font-weight: 600; font-size: clamp(2rem, 3.6vw, 3rem); line-height: 1.05; letter-spacing: 0.005em; text-wrap: balance; }
+h3 { font-family: var(--police-titre); font-weight: 500; font-size: 1.5rem; line-height: 1.2; }
+p { max-width: 62ch; }
+.grand { font-size: 1.3125rem; line-height: 1.5; }
+.surtitre { color: var(--encre-2); margin-bottom: 20px; }
+.note { font-size: 0.9375rem; color: var(--encre-2); }
+.devise { font-family: var(--police-titre); font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; font-size: 1rem; color: var(--bleu); }
+.site-contenu p a, .coordonnees a, .coordonnees-liste a, .site-pied a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: var(--sable-fonce); transition: text-decoration-color 0.2s ease; }
+.site-contenu p a:active, .coordonnees a:active, .coordonnees-liste a:active, .site-pied a:active { text-decoration-color: currentColor; }
+
+/* Boutons : un seul modèle. Le bloc de claustra en tête pivote en losange pendant que la couleur de
+   remplissage balaie le bouton de gauche à droite : au survol avec une souris, au clavier, et le temps
+   de l'appui sur un écran tactile. Aucun effet de survol ne s'applique sans souris : sur un écran
+   tactile il resterait figé après le toucher. */
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 32px; margin-top: 32px; }
+.bouton {
+  --fond: var(--orange); --texte: var(--encre); --bord: transparent;
+  --remplissage: var(--encre); --texte-actif: var(--orange);
+  position: relative; isolation: isolate; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 14px;
+  padding: 16px 26px 16px 22px; border: 0; border-radius: 2px;
+  background: var(--fond); color: var(--texte); box-shadow: inset 0 0 0 1.5px var(--bord);
+  font-family: var(--police-titre); font-weight: 500; font-size: 1.125rem; letter-spacing: 0.02em; line-height: 1;
+  text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.4s var(--glisse), transform 0.15s ease;
+}
+.bouton::before { content: ""; flex: none; width: 9px; height: 9px; background: currentColor; transition: transform 0.5s var(--sortie); }
+.bouton::after { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--remplissage); clip-path: inset(0 100% 0 0); transition: clip-path 0.45s var(--glisse); }
+.bouton:focus-visible, .bouton:active { color: var(--texte-actif); }
+.bouton:focus-visible::after, .bouton:active::after { clip-path: inset(0); }
+.bouton:focus-visible::before, .bouton:active::before { transform: rotate(45deg) scale(1.15); }
+.bouton:active { transform: scale(0.97); }
+.bouton:active::after { transition-duration: 0.15s; }
+a.bouton { text-decoration: none; }
+.bouton small { font-family: var(--police); font-weight: 400; font-size: 0.8125rem; letter-spacing: 0; opacity: 0.75; }
+.bouton-contour { --fond: transparent; --texte: var(--encre); --bord: var(--encre); --remplissage: var(--encre); --texte-actif: var(--papier); }
+.bouton-petit { padding: 12px 18px 12px 16px; font-size: 1rem; gap: 10px; }
+.bouton-petit::before { width: 7px; height: 7px; }
+
+/* Lien secondaire : la même puce, le soulignement se trace sous le texte */
+.lien-second {
+  position: relative; display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; padding-bottom: 3px;
+  background: linear-gradient(currentColor, currentColor) no-repeat 17px 100% / 0 1.5px;
+  transition: background-size 0.35s var(--glisse);
+}
+.lien-second::before { content: ""; flex: none; width: 7px; height: 7px; background: var(--brique); transition: transform 0.45s var(--sortie), background-color 0.3s ease; }
+.lien-second::after { content: ""; position: absolute; inset: -12px -6px; }
+.lien-second:focus-visible, .lien-second:active { background-size: calc(100% - 17px) 1.5px; }
+.lien-second:focus-visible::before, .lien-second:active::before { transform: rotate(45deg) scale(1.3); background: var(--orange); }
+
+/* En-tête */
+.site-entete { position: sticky; top: 0; z-index: 10; background: var(--papier); border-bottom: 1px solid transparent; transition: border-color 0.2s ease; }
+.site-entete.defile { border-bottom-color: var(--sable-fonce); }
+.site-entete-interieur { max-width: var(--largeur); margin: 0 auto; padding: 14px var(--gouttiere); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.site-marque { position: relative; z-index: 2; }
+.site-marque img { display: block; height: 44px; width: auto; }
+.site-menu-bouton { display: none; }
+.site-nav { display: flex; align-items: center; gap: 36px; }
+.site-nav ul { display: flex; gap: 28px; }
+.site-nav ul a { text-decoration: none; font-weight: 500; padding: 6px 0; background: linear-gradient(var(--encre), var(--encre)) no-repeat left bottom / 0 1.5px; transition: background-size 0.3s var(--glisse); }
+.site-nav ul a[aria-current="page"], .site-nav ul a:focus-visible { background-size: 100% 1.5px; }
+.site-nav-pied { display: flex; align-items: center; }
+.site-nav-contact { display: none; }
+
+/* Structure des pages */
+.site-contenu > section, .site-contenu > figure { max-width: var(--largeur); margin: 0 auto; padding-left: var(--gouttiere); padding-right: var(--gouttiere); }
+.page-tete { padding-top: 72px; padding-bottom: 32px; }
+.page-tete h1 { font-size: clamp(2.75rem, 6vw, 5rem); max-width: 24ch; margin-bottom: 28px; }
+.page-tete .grand { max-width: 58ch; }
+.bloc { display: grid; grid-template-columns: 5fr 7fr; column-gap: 56px; row-gap: 40px; padding-top: 96px; padding-bottom: 96px; }
+.bloc + .bloc, .page-tete + .bloc, .photo-pleine + .bloc { border-top: 1px solid var(--sable-fonce); }
+.bloc > * { min-width: 0; }
+.bloc-titre .note { margin-top: 12px; }
+.bloc-titre .lien-second { margin-top: 20px; }
+.bloc-corps > * + * { margin-top: 24px; }
+.bloc-photo, .bloc-corps + .bloc-photo { grid-column: 1 / -1; }
+.colonnes-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.colonnes-2 > div > * + * { margin-top: 12px; }
+.colonnes-2 h3 { margin-bottom: 12px; }
+.bloc-ecole .bloc-corps > div + div { margin-top: 32px; }
+
+/* Bandes pleine largeur sans changer la structure : l'ombre étendue est rognée à la hauteur de la section */
+.bande-sable, .bande-encre { clip-path: inset(0 -100vmax); border-top: 0; }
+.bande-sable { background: var(--sable); box-shadow: 0 0 0 100vmax var(--sable); }
+.bande-encre { background: var(--encre); color: var(--sable); box-shadow: 0 0 0 100vmax var(--encre); }
+.bande-sable + .bloc, .bande-encre + .bloc, .bande-sable + .photo-pleine { border-top: 0; }
+.bande-encre h2, .bande-encre h3 { color: var(--papier); }
+.bande-encre .note, .bande-encre .registre-domaine > p, .bande-encre .registre-plafond, .bande-encre .capital-plafonds { color: var(--sable-texte); }
+
+/* Photos : des tirages qu'on prend en main. Sur écran avec souris, la photo attend en tons sable et
+   encre ; sous le pointeur elle s'incline vers lui en 3D (site.js), reprend ses couleurs, accroche
+   un reflet et se soulève. Un clic l'ouvre en grand. Sur téléphone, toujours en couleur. */
+.photo {
+  display: block; width: 100%; position: relative; padding: 0; border: 0; background: none;
+  cursor: zoom-in; text-align: left; color: inherit;
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.7s var(--sortie), box-shadow 0.6s var(--sortie);
+}
+.photo picture { display: block; overflow: hidden; }
+.photo img { display: block; width: 100%; height: auto; transition: transform 0.9s var(--sortie), filter 0.6s ease; }
+.photo::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.26), transparent 50%); opacity: 0; transition: opacity 0.4s ease; }
+.photo:focus-visible { outline: 2px solid var(--bleu); outline-offset: 4px; }
+/* Effets des photos : souris ET mise en page de bureau. Sur un écran étroit, les photos se comportent
+   comme sur téléphone, même si l'appareil annonce une souris (fenêtre réduite, tablette avec pavé). */
+@media (hover: hover) and (pointer: fine) and (min-width: 880px) {
+  .photo img { filter: grayscale(1) sepia(0.5) saturate(0.8) contrast(1.02); }
+  .photo:hover img, .photo:focus-visible img { filter: none; transform: scale(1.04); }
+  .photo:hover { box-shadow: 0 34px 48px -30px rgba(28, 26, 23, 0.6); }
+  .photo:hover::after { opacity: 1; }
+  .photo.incline { transition: transform 0.12s linear, box-shadow 0.6s var(--sortie); }
+}
+.cadre-photo figcaption { display: flex; align-items: baseline; gap: 10px; margin-top: 18px; font-size: 0.9375rem; color: var(--encre-2); }
+.cadre-photo figcaption::before { content: ""; flex: none; width: 7px; height: 7px; background: var(--brique); transform: translateY(-1px); }
+.photo-pleine { padding-top: 24px; padding-bottom: 72px; }
+.site-contenu > .photo-debord { max-width: none; padding: 0 0 72px; }
+.photo-debord img { max-height: 72vh; object-fit: cover; }
+.photo-debord figcaption { max-width: var(--largeur); margin: 18px auto 0; padding: 0 var(--gouttiere); }
+.bloc-photo-aside { max-width: 420px; margin-top: 40px; }
+
+/* Effets de survol : uniquement avec une souris ou un pavé tactile (hover: hover, pointer: fine).
+   Les lignes du tableau de cours et les numéros de la frise ne sont pas des liens : ils ne réagissent
+   qu'en repère de lecture, sans changer le curseur, et pas du tout au toucher. */
+@media (hover: hover) and (pointer: fine) {
+  .site-contenu p a:hover, .coordonnees a:hover, .coordonnees-liste a:hover, .site-pied a:hover { text-decoration-color: currentColor; }
+  .bouton:hover { color: var(--texte-actif); }
+  .bouton:hover::after { clip-path: inset(0); }
+  .bouton:hover::before { transform: rotate(45deg) scale(1.15); }
+  .lien-second:hover { background-size: calc(100% - 17px) 1.5px; }
+  .lien-second:hover::before { transform: rotate(45deg) scale(1.3); background: var(--orange); }
+  .site-nav ul a:hover { background-size: 100% 1.5px; }
+  .carte-tel a:hover { background-size: 100% 2px; }
+  .carte-retourner:hover::before { transform: rotate(45deg) scale(1.3); }
+  .visionneuse-fermer:hover { transform: rotate(90deg); }
+  .tableau-cours li:hover { color: var(--bleu); }
+  .tableau-cours li:hover::before { width: 0.42em; margin-right: 0.55em; transform: rotate(45deg); }
+  .frise li:hover::before { transform: scale(1.15); }
+  .puce-choix span:hover { background: var(--sable-fonce); }
+}
+
+/* Visionneuse */
+.visionneuse { border: 0; padding: 0; background: transparent; max-width: min(96vw, 1400px); max-height: 96vh; overflow: visible; }
+.visionneuse[open] { animation: agrandir 0.45s var(--sortie); }
+.visionneuse::backdrop { background: rgba(28, 26, 23, 0.92); animation: apparaitre 0.3s ease; }
+.visionneuse img { display: block; max-width: 96vw; max-height: 86vh; width: auto; height: auto; }
+.visionneuse figcaption { display: flex; align-items: baseline; gap: 10px; color: var(--sable); font-size: 0.9375rem; margin-top: 14px; }
+.visionneuse figcaption::before { content: ""; width: 7px; height: 7px; background: var(--orange); flex: none; }
+.visionneuse-fermer { position: fixed; top: 16px; right: 16px; width: 48px; height: 48px; border: 0; border-radius: 50%; background: var(--sable); color: var(--encre); display: grid; place-items: center; cursor: pointer; transition: transform 0.4s var(--sortie); }
+.visionneuse-fermer:active { transform: scale(0.92); }
+.visionneuse-fermer .icone { display: block; }
+@keyframes agrandir { from { opacity: 0; transform: scale(0.94); } }
+@keyframes apparaitre { from { opacity: 0; } }
+
+/* Blocs ajourés : les vingt points du semestre, dessinés comme les claustras de la façade */
+.capital { margin-top: 36px; max-width: 340px; }
+.capital-grille { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.bloc-pt { display: block; aspect-ratio: 1; background: var(--sable-fonce); position: relative; }
+.bloc-pt::after { content: ""; position: absolute; inset: 32%; background: var(--papier); }
+.bande-encre .bloc-pt { background: #3b3732; }
+.bande-encre .bloc-pt::after { background: var(--encre); }
+.bloc-pt-club { background: var(--bleu) !important; }
+.bloc-pt-ecologie { background: var(--vert) !important; }
+.bloc-pt-citoyen { background: var(--brique) !important; }
+.capital-titre { margin-top: 18px; font-family: var(--police-titre); font-weight: 500; font-size: 1.125rem; line-height: 1.2; }
+.capital-nombre { font-size: 2.75rem; font-weight: 700; vertical-align: -0.08em; margin-right: 0.15em; }
+.capital-plafonds { margin-top: 12px; font-size: 0.9375rem; color: var(--encre-2); }
+.capital-plafonds li { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.capital-mini { display: inline-grid; grid-auto-flow: column; gap: 3px; }
+.capital-mini .bloc-pt { width: 14px; }
+
+/* Cartes des domaines : au recto ce qu'est le domaine, au verso comment il se compte.
+   Elles se retournent au survol avec une souris, par le bouton au clavier et au toucher. */
+.cartes-domaines { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.carte { position: relative; perspective: 1100px; }
+.carte-interieur { display: grid; height: 100%; transform-style: preserve-3d; transition: transform 0.8s var(--glisse); }
+.carte-face { grid-area: 1 / 1; display: flex; flex-direction: column; gap: 8px; min-height: 236px; padding: 24px 22px 64px; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.carte-recto { background: var(--sable); }
+.carte-recto h3 { font-size: 1.75rem; line-height: 1.05; }
+.carte-recto > p { font-size: 0.9375rem; color: var(--encre-2); }
+.carte-plafond { margin-top: auto !important; display: flex; align-items: center; gap: 10px; font-size: 0.875rem; color: var(--encre-2); }
+.carte-verso { background: var(--encre) var(--motif-encre); color: var(--sable); transform: rotateY(180deg); }
+.carte-verso-titre { font-family: var(--police-titre); font-weight: 500; font-size: 1.125rem; color: var(--papier); margin-bottom: 4px; }
+.carte-verso .registre-lignes div { border-bottom-color: rgba(242, 234, 217, 0.14); padding: 7px 0; font-size: 0.9375rem; }
+.carte-verso .registre-lignes dd { font-size: 1.25rem; }
+.carte-verso .registre-lignes .gain { color: var(--vert-clair); }
+.carte-verso .registre-lignes .perte { color: var(--brique-claire); }
+.carte.retournee .carte-interieur { transform: rotateY(180deg); }
+.carte-retourner {
+  position: absolute; left: 22px; bottom: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0; border: 0; background: none; color: var(--encre); font-weight: 600; font-size: 0.9375rem; cursor: pointer;
+  transition: color 0.3s ease 0.2s;
+}
+.carte-retourner::before { content: ""; width: 7px; height: 7px; background: var(--brique); transition: transform 0.45s var(--sortie); }
+.carte-retourner:focus-visible::before, .carte-retourner:active::before { transform: rotate(45deg) scale(1.3); }
+.carte { transition: transform 0.2s ease; }
+.carte-retourner-retour, .carte.retournee .carte-retourner-voir { display: none; }
+.carte.retournee .carte-retourner-retour { display: inline; }
+.carte.retournee .carte-retourner { color: var(--sable); }
+@media (hover: hover) and (pointer: fine) {
+  .carte:hover .carte-interieur { transform: rotateY(180deg); }
+  .carte-retourner:not(:focus-visible) { opacity: 0; pointer-events: none; }
+}
+@media (hover: none) {
+  .carte { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .carte:active { transform: scale(0.98); }
+}
+
+/* Accueil : bande sable à motif, titre pleine largeur, photo qui déborde à droite */
+.site-contenu > .accueil-hero { max-width: none; padding: 64px 0 0; }
+.accueil-hero {
+  position: relative; isolation: isolate; overflow-x: clip;
+  display: grid; column-gap: 24px; row-gap: 40px; align-items: start;
+  grid-template-columns: [bord-g] minmax(var(--gouttiere), 1fr) [contenu-g] repeat(12, minmax(0, 67px)) [contenu-d] minmax(var(--gouttiere), 1fr) [bord-d];
+}
+.accueil-hero::before { content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: 120px; background: var(--sable) var(--motif-sable); z-index: -1; }
+.accueil-hero-titre { grid-column: contenu-g / contenu-d; }
+.accueil-hero-texte { grid-column: contenu-g / span 5; padding: 8px 0 72px; }
+.accueil-hero-photo { grid-column: 8 / bord-d; margin-top: 8px; }
+.accueil-presentation { font-size: 1.1875rem; line-height: 1.55; margin-bottom: 22px; }
+.reperes { padding-top: 72px; padding-bottom: 8px; }
+.reperes-phrase { font-size: clamp(1.25rem, 2.2vw, 1.625rem); line-height: 1.5; max-width: 38ch; }
+.reperes-phrase strong { font-family: var(--police-titre); font-weight: 600; font-size: 1.7em; line-height: 1; color: var(--bleu); padding: 0 0.06em; font-variant-numeric: tabular-nums; }
+.etapes-courtes { counter-reset: etape; max-width: 62ch; }
+.etapes-courtes li { counter-increment: etape; display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--sable-fonce); }
+.etapes-courtes li::before { content: counter(etape); font-family: var(--police-titre); font-weight: 600; font-size: 1.25rem; color: var(--brique); }
+.bloc-vie .bloc-corps { grid-column: 1 / -1; }
+.photos-trio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; transition: grid-template-columns 0.6s var(--glisse); }
+.photos-trio .photo picture { height: 340px; }
+.photos-trio img { height: 100%; object-fit: cover; }
+@media (hover: hover) and (pointer: fine) and (min-width: 880px) {
+  .photos-trio:has(> figure:nth-child(1):hover) { grid-template-columns: 2fr 1fr 1fr; }
+  .photos-trio:has(> figure:nth-child(2):hover) { grid-template-columns: 1fr 2fr 1fr; }
+  .photos-trio:has(> figure:nth-child(3):hover) { grid-template-columns: 1fr 1fr 2fr; }
+}
+.accroche { font-family: var(--police-titre); font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem); line-height: 1.2; max-width: 24ch; }
+.bloc-corps .accroche + p { margin-top: 20px; }
+.coordonnees p { margin: 0 0 8px; }
+.coordonnees .bouton { margin-top: 20px; }
+
+/* Registre : le barème présenté comme un grand livre, chiffres alignés, signés, colorés par sens */
+.registre { display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; }
+.registre-domaine { padding: 28px 0 32px; border-top: 1px solid var(--sable-fonce); }
+.bande-encre .registre-domaine { border-top-color: rgba(242, 234, 217, 0.22); }
+.registre-domaine h3 { margin-bottom: 6px; }
+.registre-domaine > p { font-size: 0.9375rem; color: var(--encre-2); margin-bottom: 18px; }
+.registre-lignes div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--sable); }
+.bande-encre .registre-lignes div { border-bottom-color: rgba(242, 234, 217, 0.12); }
+.registre-lignes dd { margin: 0; font-family: var(--police-titre); font-weight: 600; font-size: 1.5rem; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.registre-lignes .gain { color: var(--vert); }
+.registre-lignes .perte { color: var(--brique); }
+.bande-encre .registre-lignes .gain { color: var(--vert-clair); }
+.bande-encre .registre-lignes .perte { color: var(--brique-claire); }
+.registre-plafond { margin-top: 14px; font-size: 0.875rem; color: var(--encre-2); }
+
+/* Séquences : les seules listes numérotées du site */
+.etapes { counter-reset: etape; }
+.etapes li { counter-increment: etape; display: grid; grid-template-columns: 56px 1fr; column-gap: 16px; padding: 24px 0; border-top: 1px solid var(--sable-fonce); }
+.etapes li::before { content: counter(etape); font-family: var(--police-titre); font-size: 2.25rem; line-height: 1; font-weight: 600; color: var(--brique); }
+.etapes h3 { grid-column: 2; margin-bottom: 6px; }
+.etapes p { grid-column: 2; }
+
+/* Tableau */
+.tableau { width: 100%; border-collapse: collapse; font-size: 1rem; }
+.tableau th, .tableau td { text-align: left; vertical-align: top; padding: 14px 16px 14px 0; border-bottom: 1px solid var(--sable-fonce); }
+.tableau th { font-weight: 600; font-size: 0.9375rem; color: var(--encre-2); }
+.tableau td:nth-child(2) { font-family: var(--police-titre); font-weight: 500; font-size: 1.25rem; }
+
+/* Tableau de cours : les programmes en grand ; au survol, un bloc entre devant la ligne */
+.tableau-cours li { display: flex; align-items: center; font-family: var(--police-titre); font-weight: 500; font-size: clamp(1.375rem, 2.2vw, 1.875rem); line-height: 1.2; padding: 16px 0; border-top: 1px solid var(--sable-fonce); transition: color 0.3s ease; }
+.tableau-cours li::before { content: ""; flex: none; width: 0; height: 0.42em; margin-right: 0; background: var(--bleu); transition: width 0.4s var(--glisse), margin-right 0.4s var(--glisse), transform 0.5s var(--sortie); }
+
+.tableau-cours li:last-child { border-bottom: 1px solid var(--sable-fonce); }
+.tableau-cours-compact li { font-size: 1.25rem; padding: 10px 0; }
+.duree { display: flex; align-items: center; gap: 12px; margin-top: 18px; font-size: 0.9375rem; color: var(--encre-2); }
+.bloc-titre .duree + .note { margin-top: 20px; }
+
+/* Frise des étapes et calendrier des candidatures */
+.bloc-frise { grid-template-columns: 1fr; row-gap: 32px; }
+.frise { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; counter-reset: etape; }
+.frise li { counter-increment: etape; padding-top: 20px; border-top: 2px solid var(--brique); }
+.frise li::before { content: counter(etape); display: block; font-family: var(--police-titre); font-weight: 700; font-size: 3.5rem; line-height: 1; color: var(--brique); margin-bottom: 14px; transition: transform 0.5s var(--sortie); transform-origin: left bottom; }
+.frise h3 { margin-bottom: 8px; }
+.calendrier { margin-top: 24px; }
+.calendrier-mois { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; max-width: 640px; }
+.calendrier-mois li { aspect-ratio: 1; display: grid; place-items: center; background: var(--papier); font-family: var(--police-titre); font-weight: 600; font-size: 1.125rem; color: var(--encre-2); }
+.calendrier-mois li.ouvert { background: var(--orange); color: var(--encre); }
+.calendrier figcaption { margin-top: 14px; font-size: 0.9375rem; color: var(--encre-2); }
+
+/* Contact : l'adresse et les numéros composés comme une carte de visite */
+.carte-adresse { font-family: var(--police-titre); font-weight: 600; text-transform: uppercase; font-size: clamp(1.75rem, 3.4vw, 2.75rem); line-height: 1.02; letter-spacing: 0.01em; }
+.carte-tel { margin-top: 20px; }
+.carte-tel span { display: block; margin-top: 6px; }
+.site-contenu .carte-tel a { text-decoration: none; }
+.carte-tel a { font-family: var(--police-titre); font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem); line-height: 1.1; font-variant-numeric: tabular-nums; background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0 2px; transition: background-size 0.35s var(--glisse); }
+.carte-tel a:focus-visible, .carte-tel a:active { background-size: 100% 2px; }
+.carte-tel small { font-family: var(--police); font-size: 0.875rem; color: var(--encre-2); margin-left: 10px; }
+.carte-contact > p + p { margin-top: 12px; }
+.carte-contact .coordonnees-liste { margin-top: 40px; }
+.site-contenu > .bande-appel { max-width: none; margin-top: 48px; padding: 0; background: var(--sable); }
+.bande-appel-interieur { max-width: var(--largeur); margin: 0 auto; padding: 48px var(--gouttiere); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; }
+.bande-appel p { font-size: 1.1875rem; }
+.coordonnees-liste > div { display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 16px 0; border-top: 1px solid var(--sable-fonce); }
+.coordonnees-liste dt { font-weight: 600; }
+.coordonnees-liste dd { margin: 0; }
+.coordonnees-liste dd small { color: var(--encre-2); }
+.coordonnees-whatsapp { border-top: 0 !important; padding-top: 24px !important; }
+.coordonnees-whatsapp dd { grid-column: 1 / -1; }
+.bloc-coordonnees { grid-template-columns: 1fr; padding-top: 48px; }
+.colonnes-contact { grid-template-columns: 1fr 520px; gap: 56px; align-items: start; }
+
+/* Formulaire de contact : champs soulignés, le trait orange se trace au focus ; objets en puces */
+#formulaire { scroll-margin-top: 96px; }
+.avis { max-width: none; margin-bottom: 28px; padding: 16px 18px; border-left: 4px solid; font-size: 0.9375rem; }
+.avis-alerte { background: #fbece7; border-color: var(--brique); }
+.avis-statut { background: #e8f0e6; border-color: var(--vert); }
+.formulaire { display: grid; gap: 30px; }
+.champs-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+fieldset.champ { border: 0; padding: 0; margin: 0; min-width: 0; }
+.champ > label, .champ > legend { display: block; padding: 0; margin-bottom: 4px; font-family: var(--police-titre); font-weight: 500; font-size: 1.125rem; }
+.champ > label small { margin-left: 6px; font-family: var(--police); font-weight: 400; font-size: 0.8125rem; color: var(--encre-2); }
+.champ-ligne { position: relative; display: block; }
+.champ-ligne::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 0.45s var(--glisse); }
+.champ-ligne:focus-within::after { transform: scaleX(1); }
+.champ-ligne input, .champ-ligne textarea {
+  display: block; width: 100%; padding: 10px 0; border: 0; border-bottom: 1.5px solid var(--sable-fonce); border-radius: 0;
+  background: transparent; color: var(--encre); font: inherit; font-size: 1.0625rem; outline: none; -webkit-appearance: none; appearance: none;
+}
+.champ-ligne textarea { min-height: 150px; padding: 12px 14px; background: var(--sable); resize: vertical; }
+.champ-ligne [aria-invalid="true"] { border-bottom-color: var(--brique); }
+.champ-erreur { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; font-size: 0.875rem; color: var(--brique); }
+.champ-erreur::before { content: ""; flex: none; width: 7px; height: 7px; background: currentColor; transform: rotate(45deg); }
+.champ-compteur { max-width: none; margin-top: 6px; text-align: right; font-size: 0.8125rem; color: var(--encre-2); font-variant-numeric: tabular-nums; }
+.champ-piege { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.puces-choix { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.puce-choix { position: relative; }
+.puce-choix input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.puce-choix span { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 16px 10px 14px; background: var(--sable); font-weight: 500; cursor: pointer; transition: background-color 0.25s ease, color 0.25s ease; }
+.puce-choix span::before { content: ""; flex: none; width: 8px; height: 8px; background: var(--sable-fonce); transition: transform 0.45s var(--sortie), background-color 0.25s ease; }
+.puce-choix input:checked + span { background: var(--encre); color: var(--sable); }
+.puce-choix input:checked + span::before { background: var(--orange); transform: rotate(45deg); }
+.puce-choix input:focus-visible + span { outline: 2px solid var(--bleu); outline-offset: 2px; }
+.formulaire .actions { margin-top: 4px; }
+.formulaire .actions .note { max-width: 32ch; }
+
+/* Pied de page : colophon, la devise en grand sur le motif */
+.site-pied { background: var(--encre) var(--motif-encre); color: var(--sable); }
+.site-pied-interieur { max-width: var(--largeur); margin: 0 auto; padding: 72px var(--gouttiere) 48px; display: grid; grid-template-columns: 5fr 3fr 4fr; gap: 40px; }
+.site-pied-devise { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4em; margin-bottom: 24px; font-family: var(--police-titre); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-size: clamp(2.25rem, 4.8vw, 3.75rem); line-height: 1; color: var(--sable); }
+.site-pied-devise span + span::before { content: "–"; margin-right: 0.4em; color: var(--orange); }
+.site-pied-nom { font-weight: 700; font-size: 1.25rem; margin-bottom: 12px; }
+.site-pied-adresse { font-size: 0.9375rem; color: var(--sable-texte); }
+.site-pied-nav ul, .site-pied-liens { display: grid; gap: 10px; }
+.site-pied a { text-decoration-color: rgba(226, 213, 187, 0.35); }
+.site-pied-copie { max-width: var(--largeur); margin: 0 auto; padding: 24px var(--gouttiere) 32px; font-size: 0.875rem; color: #a89c84; border-top: 1px solid rgba(226, 213, 187, 0.18); }
+
+/* Le seul mouvement à l'arrivée sur l'accueil : la photo se découvre depuis le bord de l'écran.
+   Le texte, lui, arrive avec la transition de page. */
+@keyframes devoiler { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
+.accueil-hero-photo { animation: devoiler 1s 0.1s var(--glisse) both; }
+
+/* Petits écrans : menu plein écran sur fond encre, liens en grand qui montent l'un après l'autre */
+@media (max-width: 879px) {
+  .site-menu-bouton {
+    display: inline-flex; align-items: center; justify-content: center; position: relative; z-index: 2;
+    width: 48px; height: 48px; margin: -6px -12px -6px 0; border: 0; background: none; color: var(--encre); cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .burger, .burger::before, .burger::after { display: block; width: 24px; height: 2px; background: currentColor; }
+  .burger { position: relative; transition: background-color 0.2s ease 0.1s; }
+  .burger::before, .burger::after { content: ""; position: absolute; left: 0; transition: transform 0.4s var(--glisse); }
+  .burger::before { transform: translateY(-7px); }
+  .burger::after { transform: translateY(7px); }
+  .site-menu-bouton[aria-expanded="true"] .burger { background-color: transparent; transition-delay: 0s; }
+  .site-menu-bouton[aria-expanded="true"] .burger::before { transform: rotate(45deg); }
+  .site-menu-bouton[aria-expanded="true"] .burger::after { transform: rotate(-45deg); }
+
+  .site-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; top: var(--hauteur-entete, 73px); z-index: 1;
+    flex-direction: column; align-items: stretch; justify-content: space-between; gap: 32px;
+    padding: 20px var(--gouttiere) calc(28px + env(safe-area-inset-bottom)); overflow-y: auto;
+    background: var(--encre) var(--motif-encre); color: var(--sable);
+    clip-path: inset(0 0 100% 0); visibility: hidden;
+    transition: clip-path 0.5s var(--glisse), visibility 0s linear 0.5s;
+  }
+  .site-nav.ouvert { clip-path: inset(0); visibility: visible; transition: clip-path 0.55s var(--glisse), visibility 0s; }
+  .site-nav ul { display: block; }
+  .site-nav ul li { overflow: hidden; border-bottom: 1px solid rgba(242, 234, 217, 0.14); }
+  .site-nav ul a {
+    display: flex; align-items: center; gap: 18px; padding: 14px 0; background: none;
+    font-family: var(--police-titre); font-weight: 600; text-transform: uppercase; font-size: clamp(2.25rem, 10.5vw, 3.25rem); line-height: 1;
+    transform: translateY(110%); transition: transform 0.55s var(--sortie), color 0.2s ease;
+  }
+  .site-nav ul a::after { content: ""; width: 12px; height: 12px; margin-left: auto; background: currentColor; opacity: 0.25; transition: transform 0.4s var(--sortie), opacity 0.2s; }
+  .site-nav ul a:active::after, .site-nav ul a[aria-current="page"]::after { transform: rotate(45deg); opacity: 1; }
+  .site-nav ul a[aria-current="page"] { color: var(--orange); }
+  .site-nav.ouvert ul a { transform: none; }
+  .site-nav.ouvert li:nth-child(1) a { transition-delay: 0.12s; }
+  .site-nav.ouvert li:nth-child(2) a { transition-delay: 0.17s; }
+  .site-nav.ouvert li:nth-child(3) a { transition-delay: 0.22s; }
+  .site-nav.ouvert li:nth-child(4) a { transition-delay: 0.27s; }
+  .site-nav.ouvert li:nth-child(5) a { transition-delay: 0.32s; }
+  .site-nav-pied { display: grid; gap: 18px; opacity: 0; transform: translateY(12px); transition: opacity 0.3s ease, transform 0.3s ease; }
+  .site-nav.ouvert .site-nav-pied { opacity: 1; transform: none; transition: opacity 0.4s ease 0.38s, transform 0.5s var(--sortie) 0.38s; }
+  .site-nav .site-compte { justify-content: center; padding: 18px; font-size: 1.125rem; --texte: var(--sable); --bord: var(--sable); --remplissage: var(--sable); --texte-actif: var(--encre); }
+  .site-nav-contact { display: flex; justify-content: space-between; gap: 16px; font-size: 0.9375rem; color: var(--sable-texte); }
+  .site-nav-contact a { text-decoration: none; padding: 10px 0; }
+
+  .site-contenu > .accueil-hero { padding-top: 40px; }
+  .accueil-hero { grid-template-columns: [bord-g] var(--gouttiere) [contenu-g] minmax(0, 1fr) [contenu-d] var(--gouttiere) [bord-d]; column-gap: 0; row-gap: 32px; }
+  .accueil-hero::before { bottom: auto; height: 100%; }
+  .accueil-hero-titre { grid-column: contenu-g / contenu-d; }
+  .accueil-hero-photo { grid-column: bord-g / bord-d; order: 2; margin-top: 0; }
+  .accueil-hero-texte { grid-column: contenu-g / contenu-d; order: 3; padding: 0 0 56px; }
+  .bloc { grid-template-columns: 1fr; row-gap: 28px; padding-top: 64px; padding-bottom: 64px; }
+  .colonnes-2, .registre, .photos-trio, .frise { grid-template-columns: 1fr; }
+  .photos-trio .photo picture { height: auto; }
+  .calendrier-mois li { font-size: 0.875rem; }
+  .colonnes-contact { gap: 40px; }
+  .reperes { padding-top: 56px; }
+  .bande-appel-interieur { grid-template-columns: 1fr; }
+  .site-pied-interieur { grid-template-columns: 1fr; gap: 32px; padding-top: 56px; }
+  .coordonnees-liste > div { grid-template-columns: 1fr; gap: 4px; }
+  .site-pied-nav ul, .site-pied-liens { gap: 0; }
+  .site-pied-nav a, .site-pied-liens a { display: inline-block; padding: 9px 0; }
+  .champs-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 479px) {
+  .cartes-domaines { grid-template-columns: 1fr; }
+  .carte-face { min-height: 200px; }
+  .tableau { font-size: 0.9375rem; table-layout: fixed; overflow-wrap: anywhere; }
+  .tableau td:nth-child(2) { font-size: 1.125rem; }
+  .tableau th, .tableau td { padding-right: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; transition-delay: 0s !important; animation: none !important; }
+}

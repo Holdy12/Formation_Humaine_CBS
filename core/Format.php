@@ -9,6 +9,12 @@ class Format {
         return ($n < 0 ? '−' : '+') . number_format(abs($n), 2, ',', ' ');
     }
 
+    // Toujours signé, sans décimales inutiles : « +3 », « −0,25 » (site vitrine).
+    public static function pointsCourts(float $n): string {
+        $texte = rtrim(rtrim(number_format(abs($n), 2, ',', ' '), '0'), ',');
+        return ($n < 0 ? '−' : '+') . $texte;
+    }
+
     public static function date(?string $d): string {
         return $d ? date('d/m/Y', strtotime($d)) : '—';
     }

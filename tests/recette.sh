@@ -35,6 +35,7 @@ verif() { if [ "$2" = "$3" ]; then echo "  ok   $1"; OK=$((OK+1)); else echo "  
 page() { curl -s -b "$TMP/$1.txt" "$URL?action=$2"; }
 jeton() { grep -o 'name="jeton" value="[^"]*"' | head -1 | sed 's/.*value="//;s/"//'; }
 connexion() { local j; j=$(curl -s -c "$TMP/$1.txt" "$URL?action=login" | jeton); curl -s -b "$TMP/$1.txt" -c "$TMP/$1.txt" -o /dev/null -w "%{redirect_url}" --data-urlencode "jeton=$j" --data-urlencode "identifiant=$2" --data-urlencode "password=$3" "$URL?action=login"; }
+connexion_rester() { local j; j=$(curl -s -c "$TMP/$1.txt" "$URL?action=login" | jeton); curl -s -b "$TMP/$1.txt" -c "$TMP/$1.txt" -o /dev/null -w "%{redirect_url}" --data-urlencode "jeton=$j" --data-urlencode "identifiant=$2" --data-urlencode "password=$3" --data-urlencode "rester=1" "$URL?action=login"; }
 
 if [ "${SANS_RESET:-0}" != "1" ]; then
     echo "--- rechargement des données ---"
@@ -47,7 +48,7 @@ fi
 
 echo "--- syntaxe PHP ---"
 ERR=0
-for f in core/*.php app/Models/*.php app/Controllers/*.php app/Controllers/Admin/*.php app/Views/etudiant/*.php app/Views/admin/*/*.php app/Views/auth/*.php app/Views/partials/*.php app/Views/erreur.php public/index.php; do
+for f in core/*.php app/Models/*.php app/Controllers/*.php app/Controllers/Admin/*.php app/Views/etudiant/*.php app/Views/admin/*/*.php app/Views/auth/*.php app/Views/partials/*.php app/Views/site/*.php app/Views/erreur.php public/index.php; do
     "$PHP" -l "$f" | grep -q "No syntax errors" || { echo "  erreur : $f"; ERR=1; }
 done
 [ $ERR = 0 ] && echo "  aucune erreur de syntaxe"
@@ -176,5 +177,56 @@ verif "P20b l'administrateur ne peut pas se désactiver" "$(curl -s -b "$TMP/adm
 verif "P21 rapports et exports" "$(page adm admin_rapports | grep -c 'Répartition des mentions') $(curl -s -b "$TMP/adm.txt" "$URL?action=admin_rapports_export&type=soldes" | head -1 | grep -c 'Matricule;Nom')" "1 1"
 verif "P22 journal : actions attribuées, accès réservé" "$(page adm admin_journal | grep -c 'badge-bleu') $(curl -s -b "$TMP/enock.txt" -o /dev/null -w '%{http_code}' "$URL?action=admin_journal")" "$(page adm admin_journal | grep -c 'badge-bleu') 403"
 verif "P23 aucune erreur PHP sur les pages du personnel" "$(for p in admin_dashboard admin_etudiants "admin_etudiant&id=6" admin_etudiant_nouveau admin_etudiants_import admin_signalements admin_signalement_nouveau "admin_signalement&id=$D1" admin_appel admin_seances admin_justificatifs admin_assiduite admin_points "admin_structure&entite=semestre" admin_clubs "admin_club&id=1" admin_bareme admin_comptes admin_mon_compte admin_rapports admin_journal; do page adm "$p"; done | grep -ci 'warning\|fatal\|notice\|deprecated')" "0"
+echo "--- cas de test : site vitrine et reconnexion ---"
+SITE="${URL%/index.php}"
+H=$(curl -s -D "$TMP/v1h.txt" -o "$TMP/v1b.txt" -w '%{http_code}' "$SITE/")
+verif "V1  accueil public : 200, devise affichée, aucun cookie déposé" "$H $(grep -q 'Excellence' "$TMP/v1b.txt" && echo devise || echo -) $(grep -ci '^set-cookie' "$TMP/v1h.txt")" "200 devise 0"
+V2=""; for s in "vie-etudiante|Vie étudiante|Les quatre domaines" "formations|Formations|Un cursus LMD" "admission|Admission|Trois étapes" "contact|Contact|nous écrire" "formation-humaine|Vie étudiante|Les quatre domaines"; do IFS='|' read -r SLUG TITRE CORPS <<< "$s"; V2="$V2 $(curl -s -o "$TMP/p.txt" -w '%{http_code}' "$SITE/$SLUG")$(grep -o '<title>[^<]*' "$TMP/p.txt" | grep -q "$TITRE" && echo t || echo -)$(grep -q "$CORPS" "$TMP/p.txt" && echo c || echo -)"; done
+verif "V2  pages du site (titre et contenu) et alias formation-humaine" "${V2# }" "200tc 200tc 200tc 200tc 200tc"
+verif "V3  adresse inconnue en 404, barre finale redirigée" "$(curl -s -o /dev/null -w '%{http_code}' "$SITE/nexistepas") $(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$SITE/formations/")" "404 301 $SITE/formations"
+A=$(curl -s "$SITE/"); M=$(curl -s -b "$TMP/m.txt" "$SITE/")
+verif "V4  en-tête : Se connecter pour un visiteur, Mon espace de Moussa vers son tableau de bord" "$(echo "$A" | grep -q 'Se connecter' && echo oui || echo non) $(echo "$A" | grep -c 'etudiant_dashboard') $(echo "$M" | grep -q 'Mon espace' && echo oui || echo non) $(echo "$M" | grep -q 'action=etudiant_dashboard' && echo oui || echo non)" "oui 0 oui oui"
+verif "V5  aucune erreur PHP sur les pages du site" "$(for s in '' vie-etudiante formations admission contact; do curl -s "$SITE/$s"; done | grep -ci 'warning\|fatal\|notice\|deprecated')" "0"
+F=$(curl -s -c "$TMP/v.txt" -b "$TMP/v.txt" "$SITE/contact"); JET=$(echo "$F" | jeton)
+verif "V6  formulaire de contact : jeton, champ piège, quatre objets" "$([ -n "$JET" ] && echo jeton) $(echo "$F" | grep -c 'name="site_web"') $(echo "$F" | grep -c 'name="objet"')" "jeton 1 4"
+R=$(curl -s -c "$TMP/v.txt" -b "$TMP/v.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "nom=" --data-urlencode "email=pas-un-email" --data-urlencode "objet=admission" --data-urlencode "message=" --data-urlencode "site_web=" "$SITE/contact")
+verif "V7  champs manquants ou invalides : une erreur par champ" "$(echo "$R" | grep -c 'class="champ-erreur"')" "3"
+R=$(curl -s -c "$TMP/v.txt" -b "$TMP/v.txt" -L --data-urlencode "nom=Test" --data-urlencode "email=a@b.td" --data-urlencode "objet=admission" --data-urlencode "message=Un message sans jeton." "$SITE/contact")
+verif "V8  envoi sans jeton refusé" "$(echo "$R" | grep -c 'Le formulaire a expiré')" "1"
+JET=$(curl -s -c "$TMP/v.txt" -b "$TMP/v.txt" "$SITE/contact" | jeton)
+R=$(curl -s -c "$TMP/v.txt" -b "$TMP/v.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "nom=Mahamat Idriss" --data-urlencode "email=parent@exemple.td" --data-urlencode "telephone=+235 66 00 00 00" --data-urlencode "objet=admission" --data-urlencode "message=Bonjour, quelles sont les dates du concours cette année ?" --data-urlencode "site_web=" "$SITE/contact")
+verif "V9  message valide, envoi pas encore branché : avis clair, texte conservé" "$(echo "$R" | grep -c 'pas encore en service') $(echo "$R" | grep -c 'quelles sont les dates du concours')" "1 1"
+JET=$(curl -s -c "$TMP/v.txt" -b "$TMP/v.txt" "$SITE/contact" | jeton)
+R=$(curl -s -c "$TMP/v.txt" -b "$TMP/v.txt" -L --data-urlencode "jeton=$JET" --data-urlencode "nom=" --data-urlencode "email=" --data-urlencode "objet=autre" --data-urlencode "message=" --data-urlencode "site_web=http://spam.example" "$SITE/contact")
+verif "V10 champ piège rempli : message écarté sans erreur affichée" "$(echo "$R" | grep -c 'class="champ-erreur"') $(echo "$R" | grep -c 'Message reçu')" "0 1"
+R=$(connexion_rester r1 CBS2026-0003 'Test1234!')
+verif "R1  « rester connecté » : cookie de reconnexion et jeton en base ; rien sans la case" "${R##*action=} $(grep -c 'reconnexion' "$TMP/r1.txt") $(sql "SELECT COUNT(*) FROM JETON_CONNEXION WHERE ID_PERSONNE=7") $(grep -c 'reconnexion' "$TMP/a2.txt")" "etudiant_dashboard 1 1 0"
+V1=$(awk '$6=="reconnexion"{print $7}' "$TMP/r1.txt")
+C=$(curl -s -b "reconnexion=$V1" -c "$TMP/r2.txt" -o /dev/null -w '%{http_code}' "$URL?action=etudiant_dashboard")
+V2=$(awk '$6=="reconnexion"{print $7}' "$TMP/r2.txt")
+verif "R2  reprise de session par le cookie seul, jeton renouvelé" "$C $([ -n "$V2" ] && [ "$V2" != "$V1" ] && echo renouvele || echo identique) $(sql "SELECT DATE_UTILISATION IS NOT NULL FROM JETON_CONNEXION WHERE ID_PERSONNE=7")" "200 renouvele 1"
+curl -s -b "$TMP/r2.txt" -c "$TMP/r2.txt" -o /dev/null "$URL?action=logout"
+verif "R3  déconnexion : jeton supprimé et cookie effacé" "$(sql "SELECT COUNT(*) FROM JETON_CONNEXION WHERE ID_PERSONNE=7") $(awk '$6=="reconnexion"{print $7}' "$TMP/r2.txt" | grep -c .)" "0 0"
+connexion_rester r4 CBS2026-0003 'Test1234!' >/dev/null
+V1=$(awk '$6=="reconnexion"{print $7}' "$TMP/r4.txt")
+curl -s -b "reconnexion=$V1" -o /dev/null "$URL?action=etudiant_dashboard"
+sql "UPDATE JETON_CONNEXION SET DATE_UTILISATION = DATE_UTILISATION - INTERVAL 2 MINUTE WHERE ID_PERSONNE=7"
+R=$(curl -s -b "reconnexion=$V1" -o /dev/null -w '%{redirect_url}' "$URL?action=etudiant_dashboard")
+verif "R4  ancien jeton rejoué après renouvellement : vol présumé, tous les jetons révoqués" "${R##*action=} $(sql "SELECT COUNT(*) FROM JETON_CONNEXION WHERE ID_PERSONNE=7")" "login 0"
+connexion_rester r5 CBS2026-0003 'Test1234!' >/dev/null
+sql "UPDATE JETON_CONNEXION SET DATE_EXPIRATION = NOW() - INTERVAL 1 DAY WHERE ID_PERSONNE=7"
+V1=$(awk '$6=="reconnexion"{print $7}' "$TMP/r5.txt")
+R=$(curl -s -b "reconnexion=$V1" -o /dev/null -w '%{redirect_url}' "$URL?action=etudiant_dashboard")
+verif "R5  jeton expiré : refusé et purgé" "${R##*action=} $(sql "SELECT COUNT(*) FROM JETON_CONNEXION WHERE ID_PERSONNE=7")" "login 0"
+connexion_rester r6 CBS2026-0003 'Test1234!' >/dev/null
+JET=$(page r6 etudiant_parametres | jeton)
+curl -s -b "$TMP/r6.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "actuel=Test1234!" --data-urlencode "nouveau=Nouveau123!" --data-urlencode "confirmation=Nouveau123!" "$URL?action=etudiant_mot_de_passe"
+verif "R6  changement de mot de passe : appareils mémorisés déconnectés" "$(sql "SELECT COUNT(*) FROM JETON_CONNEXION WHERE ID_PERSONNE=7")" "0"
+JET=$(page r6 etudiant_parametres | jeton); curl -s -b "$TMP/r6.txt" -o /dev/null --data-urlencode "jeton=$JET" --data-urlencode "actuel=Nouveau123!" --data-urlencode "nouveau=Test1234!" --data-urlencode "confirmation=Test1234!" "$URL?action=etudiant_mot_de_passe"
+connexion_rester r7 CBS2026-0003 'Test1234!' >/dev/null
+V1=$(awk '$6=="reconnexion"{print $7}' "$TMP/r7.txt")
+C1=$(curl -s -b "reconnexion=$V1" -o /dev/null -w '%{http_code}' "$URL?action=etudiant_dashboard")
+C2=$(curl -s -b "reconnexion=$V1" -o /dev/null -w '%{http_code}' "$URL?action=etudiant_dashboard")
+verif "R7  deux requêtes simultanées avec le même cookie : pas de faux vol, appareil conservé" "$C1 $C2 $(sql "SELECT COUNT(*) FROM JETON_CONNEXION WHERE ID_PERSONNE=7")" "200 200 1"
 echo "--- résultat : $OK ok, $KO ko ---"
 [ $KO = 0 ]

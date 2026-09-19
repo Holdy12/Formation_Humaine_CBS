@@ -1,0 +1,21 @@
+# Adresses du site vitrine (« /formations », « /vie-etudiante »…) servies par index.php.
+# Nécessite mod_rewrite et AllowOverride All ; sans cela, les adresses en ?action= restent valables.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^[a-z-]+/?$ index.php [L,QSA]
+</IfModule>
+
+# Cache navigateur : les feuilles et le script portent leur date en paramètre (?v=…), un long cache
+# ne sert donc jamais une version périmée. Photos et police changent rarement.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+</IfModule>

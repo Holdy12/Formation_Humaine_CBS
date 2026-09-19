@@ -25,7 +25,12 @@
                             </button>
                         </div>
                     </div>
+                    <label class="case auth-case">
+                        <input type="checkbox" name="rester" value="1">
+                        <span>Rester connecté sur cet appareil <small>pendant 10 jours, à éviter sur un ordinateur partagé</small></span>
+                    </label>
                     <button type="submit" class="btn btn-principal btn-large">Se connecter</button>
                     <a href="index.php?action=mot_de_passe_oublie" class="auth-lien">Mot de passe oublié ?</a>
+                    <a href="./" class="auth-lien auth-lien-site">Retour au site</a>
                 </form>
 <?php require __DIR__ . '/cadre_fin.php'; ?>

@@ -4,3 +4,5 @@
 .DS_Store
 /storage/*/*
 !/storage/*/.gitkeep
+/CBS photos/
+/.playwright-mcp/

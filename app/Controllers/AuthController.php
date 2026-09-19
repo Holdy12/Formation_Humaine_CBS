@@ -74,7 +74,10 @@ class AuthController {
 
         TentativeConnexion::effacer($identifiant);
         Auth::connecter($personne);
-        Journal::ecrire('Connexion', 'Ouverture de session');
+        if (!empty($_POST['rester'])) {
+            Auth::memoriser((int)$personne['ID_PERSONNE']);
+        }
+        Journal::ecrire('Connexion', 'Ouverture de session' . (!empty($_POST['rester']) ? ' (appareil mémorisé)' : ''));
         if (!empty($_SESSION['doit_changer_mdp'])) {
             Auth::rediriger('premiere_connexion');
         }
@@ -90,7 +93,7 @@ class AuthController {
         if (Auth::idPersonne() > 0) {
             Journal::ecrire('Déconnexion', 'Fermeture de session');
         }
-        Auth::demarrer();
+        Auth::oublier();
         $_SESSION = [];
         session_destroy();
         Auth::rediriger('login', ['erreur' => 'deconnecte']);

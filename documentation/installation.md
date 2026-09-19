@@ -100,7 +100,7 @@ mysql -u root -p --default-character-set=utf8mb4 < database/seed.sql
 mysql -u root -p --default-character-set=utf8mb4 < database/donnees_test.sql
 ```
 
-- `schema.sql` supprime et recrée la base `formation_humaine_db` (27 tables). Ne jamais le
+- `schema.sql` supprime et recrée la base `formation_humaine_db` (28 tables). Ne jamais le
   rejouer sur une base qui contient des données réelles.
 - `seed.sql` charge les rôles, les domaines, le barème, les paramètres et le compte administrateur.
 - `donnees_test.sql` est facultatif : trois étudiants, quatre membres du personnel, des séances,
@@ -113,7 +113,7 @@ mysql -u root -p --default-character-set=utf8mb4 < database/donnees_test.sql
 C:\xampp\mysql\bin\mysql.exe -u root formation_humaine_db -e "SELECT COUNT(*) AS tables_creees FROM information_schema.tables WHERE table_schema='formation_humaine_db'; SELECT COUNT(*) AS parametres FROM PARAMETRE_SYSTEME; SELECT NOM_DOMAINE FROM DOMAINE;"
 ```
 
-Attendu : 27 tables, 15 paramètres, et les quatre domaines avec leurs accents intacts
+Attendu : 28 tables, 15 paramètres, et les quatre domaines avec leurs accents intacts
 (« Comportement écologique », « Action citoyenne »). Des caractères comme `Ã©` à la place de
 `é` signalent un import sans `utf8mb4` : recommencer l'étape 3.3.
 
@@ -179,11 +179,16 @@ déjà à cette adresse. `Ctrl+C` arrête le serveur.
 Pour une adresse plus propre, déclarer un hôte virtuel dont le `DocumentRoot` est le dossier
 `public/` et adapter `BASE_URL` (voir l'étape 8).
 
+Les pages du site vitrine ont des adresses courtes (`/formations`, `/vie-etudiante`, `/contact`,
+`/connexion`). Sous Apache, le fichier `public/.htaccess` les renvoie vers `index.php` : il faut
+`mod_rewrite` et `AllowOverride All` sur le dossier (c'est le cas par défaut avec XAMPP). Sans
+réécriture, les adresses en `index.php?action=…` restent toutes valables.
+
 ### Vérifier
 
-La page de connexion s'affiche avec le panneau de présentation à gauche et le formulaire à
-droite. Une page blanche ou un message « Erreur de connexion à la base de données » renvoie à
-l'étape 9.
+La page d'accueil du site s'affiche, avec le bouton « Se connecter » dans l'en-tête ; il mène à la
+page de connexion, avec le panneau de présentation à gauche et le formulaire à droite. Une page
+blanche ou un message « Erreur de connexion à la base de données » renvoie à l'étape 9.
 
 ## 6. Première connexion
 
@@ -240,7 +245,11 @@ en une fois), puis redémarrer Apache.
 
 1. **Racine web** : pointer le `DocumentRoot` (Apache) ou `root` (Nginx) sur le dossier
    `public/`, jamais sur la racine du projet, pour que `config/`, `storage/`, `database/` et
-   `documentation/` restent inaccessibles depuis le navigateur.
+   `documentation/` restent inaccessibles depuis le navigateur. Pour les adresses courtes du site
+   vitrine : sous Apache, `AllowOverride All` sur `public/` (le `.htaccess` fait le reste) ; sous
+   Nginx, dans le bloc `server`, `location / { try_files $uri /index.php?$args; }`. Si
+   `mod_expires` est actif, le même `.htaccess` fait garder feuilles de style, script, police
+   et photos en cache par le navigateur (sous Nginx : `expires 1y;` sur `/assets/`).
 2. **`.env`** : créer le fichier sur le serveur (ou fournir les variables par l'hébergeur) avec
    un compte MySQL dédié et `BASE_URL` à l'adresse publique, avec `https://` si un certificat
    est en place. Ne jamais copier le `.env` d'un poste de développement.
@@ -256,10 +265,11 @@ en une fois), puis redémarrer Apache.
    la main à la main). La marche à suivre pour brancher Resend est dans
    `documentation/courriel-resend.md`.
 7. **Mise à jour d'une base déjà en place** : la version actuelle rend `PERSONNE.DATE_NAISSANCE`
-   facultative et ajoute la table `TENTATIVE_CONNEXION`. Sur une base créée avec une version
-   antérieure de `schema.sql`, exécuter `ALTER TABLE PERSONNE MODIFY DATE_NAISSANCE DATE NULL;`
-   et le `CREATE TABLE TENTATIVE_CONNEXION` donné dans `documentation/base-de-donnees.md`, qui
-   liste les autres évolutions du schéma.
+   facultative et ajoute les tables `TENTATIVE_CONNEXION` et `JETON_CONNEXION` (appareils
+   mémorisés, « rester connecté »). Sur une base créée avec une version antérieure de
+   `schema.sql`, exécuter `ALTER TABLE PERSONNE MODIFY DATE_NAISSANCE DATE NULL;` et les deux
+   `CREATE TABLE` donnés dans `documentation/base-de-donnees.md`, qui liste les autres
+   évolutions du schéma.
 8. **Mise à jour d'un poste existant** : les accès ont quitté `config/database.php` ; après
    `git pull`, créer `.env` (étape 4) avant de relancer l'application. Le mot de passe MySQL qui
    figurait dans les anciennes versions du fichier reste dans l'historique Git : le changer
