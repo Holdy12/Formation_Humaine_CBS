@@ -86,6 +86,39 @@
         visionneuse.addEventListener('close', function () { image.src = ''; });
     }
 
+    // Apparitions au défilement. Liste des parties concernées : c'est ici qu'on en ajoute ou retire.
+    // Déclenchement quand l'élément a dépassé 18 % de la hauteur de l'écran depuis le bas, pour que
+    // le mouvement se voie ; les éléments qui entrent ensemble partent l'un après l'autre.
+    var cibles = [
+        '.bloc-titre', '.reperes-phrase', '.accroche', '.capital', '.carte', '.etapes-courtes li',
+        '.bloc-ecole .bloc-corps > div', '.tableau-cours li', '.photos-trio figure', '.bloc-photo',
+        '.bloc-photo-aside', '.photo-debord', '.registre-domaine', '.etapes li', '.frise li', '.calendrier',
+        '.tableau', '.carte-contact', '.bloc-coordonnees figure', '.formulaire', '.bande-appel-interieur',
+        '.site-pied-devise span'
+    ].join(', ');
+    if (!calme.matches && 'IntersectionObserver' in window) {
+        var aReveler = document.querySelectorAll(cibles);
+        var limite = window.innerHeight * 0.82;
+        aReveler.forEach(function (el) {
+            el.setAttribute('data-reveler', '');
+            if (el.getBoundingClientRect().top < limite) el.classList.add('deja-vu');
+        });
+        html.classList.add('reveler-actif');
+        var montrer = function (liste) {
+            liste.sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top || a.getBoundingClientRect().left - b.getBoundingClientRect().left; });
+            liste.forEach(function (el, i) { el.style.setProperty('--i', Math.min(i, 6)); el.classList.add('revele'); observateur.unobserve(el); });
+        };
+        var observateur = new IntersectionObserver(function (entrees) {
+            montrer(entrees.filter(function (e) { return e.isIntersecting; }).map(function (e) { return e.target; }));
+        }, { rootMargin: '0px 0px -18% 0px' });
+        aReveler.forEach(function (el) { if (!el.classList.contains('deja-vu')) observateur.observe(el); });
+        // En bas de page, plus rien ne peut monter jusqu'au seuil : on montre ce qui reste.
+        window.addEventListener('scroll', function () {
+            if (window.innerHeight + window.scrollY < document.documentElement.scrollHeight - 4) return;
+            montrer(Array.prototype.filter.call(aReveler, function (el) { return !el.classList.contains('deja-vu') && !el.classList.contains('revele'); }));
+        }, { passive: true });
+    }
+
     // Formulaire de contact : compteur de caractères, et après un envoi refusé, le curseur va au
     // premier champ à corriger.
     document.querySelectorAll('[data-compteur]').forEach(function (zone) {

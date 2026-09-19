@@ -33,8 +33,9 @@ porte un jeton CSRF. Le lien « Se connecter » de l'en-tête devient « Mon esp
 prénom) dès qu'une session existe, et mène au tableau de bord du rôle.
 
 D'une page à l'autre, le navigateur enchaîne les pages sans coupure (`@view-transition`, CSS
-seul) : l'en-tête reste en place, le contenu glisse et se fond. Les navigateurs qui ne le
-gèrent pas chargent la page normalement ; la page de connexion y participe aussi.
+seul) : la nouvelle page monte du bas de l'écran par-dessus l'ancienne, qui s'assombrit
+derrière ; l'en-tête reste en place. Les navigateurs qui ne le gèrent pas (Firefox à ce jour)
+chargent la page normalement ; la page de connexion y participe aussi.
 
 ## 2. Modifier un texte, un numéro, une photo
 
@@ -81,6 +82,15 @@ survol resterait figé après le toucher. Le toucher a son propre retour, le tem
 photo s'enfoncent légèrement. Les lignes du tableau de cours et les numéros de la frise ne sont
 pas des liens : ils ne réagissent qu'à la souris, en repère de lecture, sans changer le curseur.
 Les cibles de toucher font au moins 44 px (zone agrandie sans changer l'apparence).
+
+**Apparitions au défilement.** Les parties qui portent chaque page (titres de section, cartes,
+photos, lignes du tableau de cours, étapes, registre, formulaire, devise du pied de page) montent
+en place quand elles sont bien entrées dans l'écran, à 18 % de sa hauteur depuis le bas, pour que
+le mouvement se voie ; celles qui entrent ensemble partent l'une après l'autre. Les vingt points
+se posent un à un et le calendrier égrène les mois avant d'ouvrir juillet à septembre. Ce qui est
+déjà visible à l'ouverture ne rejoue rien, tout ce qui reste s'affiche en bas de page, et sans
+JavaScript ou avec moins d'animations demandées, tout est affiché d'emblée. La liste des parties
+concernées est dans `site.js` (`cibles`).
 
 **Menu sur petit écran.** Sous 880 px, le menu s'ouvre en plein écran sous l'en-tête, fond encre
 à motif, liens en grand qui montent l'un après l'autre, page courante en orange ; le bouton

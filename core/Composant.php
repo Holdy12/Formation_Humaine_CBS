@@ -47,7 +47,11 @@ class Composant {
 
     // Rangée de blocs ajourés, motif des claustras du campus : sert à figurer des points (site vitrine).
     public static function blocs(int $nombre, string $classe = ''): string {
-        $classes = trim('bloc-pt ' . $classe);
-        return str_repeat('<span class="' . htmlspecialchars($classes) . '"></span>', max(0, $nombre));
+        $classes = htmlspecialchars(trim('bloc-pt ' . $classe));
+        $html = '';
+        for ($n = 0; $n < $nombre; $n++) {
+            $html .= '<span class="' . $classes . '" style="--n:' . $n . '"></span>';
+        }
+        return $html;
     }
 }

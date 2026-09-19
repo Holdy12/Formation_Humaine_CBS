@@ -20,7 +20,7 @@ $contact = $contenu['contact'];
             <figure class="calendrier" role="img" aria-label="Candidatures ouvertes de juillet à septembre">
                 <ol class="calendrier-mois" aria-hidden="true">
                     <?php foreach (['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'] as $i => $lettre): ?>
-                        <li<?= in_array($i + 1, $a['mois_ouverts'], true) ? ' class="ouvert"' : '' ?>><?= $lettre ?></li>
+                        <li style="--n:<?= $i ?>"<?= in_array($i + 1, $a['mois_ouverts'], true) ? ' class="ouvert"' : '' ?>><?= $lettre ?></li>
                     <?php endforeach; ?>
                 </ol>
                 <figcaption aria-hidden="true">Candidatures ouvertes de juillet à septembre</figcaption>
