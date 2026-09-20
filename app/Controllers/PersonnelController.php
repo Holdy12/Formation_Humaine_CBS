@@ -90,9 +90,7 @@ abstract class PersonnelController {
         if (Auth::peut('journal.consulter')) {
             $administration[] = $entree('journal', 'admin_journal', 'oeil', 'Journal');
         }
-        if (Auth::peut('roles.gerer') || Auth::peut('comptes.gerer')) {
-            $administration[] = $entree('roles', 'admin_roles', 'cadenas', 'Rôles et permissions');
-        }
+       
         if ($administration) {
             $sections[] = ['titre' => 'Administration', 'entrees' => $administration];
         }
